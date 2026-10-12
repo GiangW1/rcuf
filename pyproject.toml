@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rcuf"
-version = "0.1.0"
+version = "0.1.1"
 description = "Instruction lifetime and recurrent-state recovery kill test for Qwen3.5"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"

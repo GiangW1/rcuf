@@ -3,11 +3,12 @@
 import torch
 from transformers import Qwen3_5ForCausalLM, Qwen3_5TextConfig
 
-from rcuf.engine import Engine, check_cache_paths
+from rcuf.engine import Engine, check_cache_paths, configure_delta_backend
 from rcuf.state import clone_cache, recurrent_states
 
 
-def tiny_engine(chunk_size=8):
+def tiny_engine(chunk_size=8, head_k=8, head_v=6):
+    configure_delta_backend("torch")
     torch.manual_seed(17)
     config = Qwen3_5TextConfig(
         vocab_size=128,
@@ -19,8 +20,8 @@ def tiny_engine(chunk_size=8):
         head_dim=16,
         linear_num_key_heads=2,
         linear_num_value_heads=2,
-        linear_key_head_dim=8,
-        linear_value_head_dim=6,
+        linear_key_head_dim=head_k,
+        linear_value_head_dim=head_v,
         linear_conv_kernel_dim=4,
         layer_types=["linear_attention", "linear_attention", "linear_attention", "full_attention"],
         rope_parameters={

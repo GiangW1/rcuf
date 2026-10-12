@@ -14,15 +14,9 @@ from .runner import expected_cells, load_selection, stage_rows
 
 
 def required_reviews(rows: list[dict]) -> set[str]:
-    required = {row["cell_id"] for row in rows if row["scores"]["needs_review"]}
-    # Review all samples in documents whose automatic language labels change across length/method/delay.
-    documents = defaultdict(list)
-    for row in rows:
-        documents[row["doc_id"]].append(row)
-    for group in documents.values():
-        if len({r["scores"]["language_ok"] for r in group}) > 1:
-            required.update(r["cell_id"] for r in group)
-    return required - {row["cell_id"] for row in rows if row["scores"].get("reviewed")}
+    # Even a high-confidence language label and matching facts cannot exclude negation,
+    # a wrong project, or unsupported prose. Final pilot gates require complete blind review.
+    return {row["cell_id"] for row in rows if not row["scores"].get("reviewed")}
 
 
 def apply_reviews(rows: list[dict], path: Path | None) -> tuple[list[dict], list[str]]:
@@ -100,6 +94,7 @@ def export_reviews(data_dir: Path, run_dir: Path, stage: str, output: Path, revi
                 "cell_id": row["cell_id"],
                 "output_sha256": row["output_sha256"],
                 "answer": row["text"],
+                "expected_project": row["target"]["project"],
                 "expected_code": row["target"]["code"],
                 "expected_budget": row["target"]["budget"],
                 "language_ok": None,
@@ -299,15 +294,17 @@ def summarize(
         immediate = paired(group(compare, "replace", long), base, "joint_ok", config)
         delayed = []
         for delay in config["delays"]:
+            delay_base = group(rows, "baseline", long, delay)
             repair = group(rows, "replace", long, delay)
-            gain = paired(repair, base, "joint_ok", config)
-            content = paired(repair, base, "content_ok", config)
+            gain = paired(repair, delay_base, "joint_ok", config)
+            content = paired(repair, delay_base, "content_ok", config)
             vs_add = paired(repair, group(rows, "add_lowrank", long, delay), "joint_ok", config)
             delayed.append(
                 {
                     "delay": delay,
                     "recovery": gain,
                     "content_change": content,
+                    "baseline_vs_immediate_baseline": paired(delay_base, base, "joint_ok", config),
                     "replacement_vs_lowrank": vs_add,
                 }
             )

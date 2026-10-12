@@ -14,14 +14,34 @@ import torch
 from .io import digest
 from .state import capture_states, make_anchor, recurrent_states
 
+_TORCH_FUNCTIONS: dict | None = None
+
 
 def configure_delta_backend(backend: str) -> None:
+    global _TORCH_FUNCTIONS
     from transformers.models.qwen3_5 import modeling_qwen3_5 as module
 
-    if backend == "torch":
-        return
-    if backend != "fla":
+    if backend not in {"torch", "fla"}:
         raise ValueError("delta_backend must be 'fla' or 'torch'.")
+    if _TORCH_FUNCTIONS is None:
+        # HF's decorated functions may automatically dispatch to installed GPU packages.
+        # Retain the undecorated reference implementations before installing our wrappers.
+        _TORCH_FUNCTIONS = {
+            name: inspect.unwrap(getattr(module, name))
+            for name in (
+                "torch_chunk_gated_delta_rule",
+                "torch_recurrent_gated_delta_rule",
+                "causal_conv1d_fn",
+                "causal_conv1d_update",
+            )
+        }
+    # Both modes intentionally use the HF convolution reference path.
+    for name in ("causal_conv1d_fn", "causal_conv1d_update"):
+        setattr(module, name, _TORCH_FUNCTIONS[name])
+    if backend == "torch":
+        for name in ("torch_chunk_gated_delta_rule", "torch_recurrent_gated_delta_rule"):
+            setattr(module, name, _TORCH_FUNCTIONS[name])
+        return
     if not torch.cuda.is_available():
         raise RuntimeError("FLA requires CUDA. For CPU checks use delta_backend=torch.")
     from fla.ops.gated_delta_rule import chunk_gated_delta_rule, fused_recurrent_gated_delta_rule

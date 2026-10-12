@@ -5,7 +5,7 @@ import pytest
 
 from rcuf.analysis import apply_reviews, paired, required_reviews
 from rcuf.io import append_jsonl, digest, load_config, recover_jsonl
-from rcuf.runner import expected_cells, method_specs
+from rcuf.runner import expected_cells, intervention_cuts, method_specs
 
 
 def config():
@@ -25,13 +25,13 @@ def test_protocol_counts_and_document_sharding():
     assert len(expected_cells("baseline", manifest, examples, None)) == 96
     assert len(expected_cells("tune", manifest, examples, None)) == 160
     assert len(expected_cells("compare", manifest, examples, selection)) == 384
-    assert len(expected_cells("delay", manifest, examples, selection)) == 128
-    # Baselines at endpoints are reused. Unique formal responses total 96+384-64+128=544.
+    assert len(expected_cells("delay", manifest, examples, selection)) == 192
+    # Baselines at endpoints are reused. Unique formal responses total 96+384-64+192=608.
     sets = [
         set(expected_cells(stage, manifest, examples, selection))
         for stage in ("baseline", "compare", "delay")
     ]
-    assert len(set.union(*sets)) == 544
+    assert len(set.union(*sets)) == 608
     cells = expected_cells("compare", manifest, examples, selection)
     shard_docs = [
         {example["doc_id"] for example, _ in cells.values() if example["doc_index"] % 2 == i} for i in (0, 1)
@@ -44,6 +44,18 @@ def test_selection_is_required_and_no_middle_length_methods():
     assert method_specs("tune", cfg, cfg["lengths"][1]) == []
     with pytest.raises(ValueError):
         method_specs("compare", cfg, 0)
+
+
+def test_delay_controls_share_cuts_and_resumed_prefill_schedule():
+    cfg = config()
+    selection = {"strengths": {"add_lowrank": 1.0, "replace": 0.5}}
+    example = {"question_cut": 33000, "length": cfg["lengths"][-1]}
+    specs = method_specs("delay", cfg, example["length"], selection)
+    for delay in cfg["delays"]:
+        methods = {s["method"] for s in specs if s["delay"] == delay}
+        assert methods == {"baseline", "add_lowrank", "replace"}
+    # The function does not accept the remaining cell list; completed cells cannot move chunk boundaries.
+    assert intervention_cuts("delay", cfg, example, selection) == [33000 - 4096, 33000 - 512]
 
 
 def row(doc, language, content=True):

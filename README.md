@@ -23,9 +23,11 @@ pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
 pip install -e '.[gpu,dev]'
 python -m pytest
 python scripts/doctor.py
+# 单独检查实际 CUDA/FLA 缓存路径（小型随机模型，不下载 4B 权重）。
+RCUF_GPU_TESTS=1 python -m pytest tests/test_backends.py -k actual_cuda
 ```
 
-默认固定 `transformers==5.19.0`、`flash-linear-attention==0.5.2`、`torch==2.8.0`。FLA 通过官方 gated-delta-rule 函数接入 HF 的 GDN 计算；attention 使用 PyTorch SDPA，卷积保留 HF 实现。无需 vLLM、verl、flash-attn 或 causal-conv1d 的 CUDA 编译。
+默认固定 `transformers==5.19.0`、`flash-linear-attention==0.5.2`、`torch==2.8.0`。FLA 通过官方 gated-delta-rule 函数接入 HF 的 GDN 计算；attention 使用 PyTorch SDPA，卷积显式使用 HF 的纯 PyTorch 实现。`delta_backend=torch` 显式绑定未装饰的参考函数，CPU 测试也会绑定这条路径，避免已安装的 FLA 或 causal-conv1d 自动接管 CPU 张量。无需 vLLM、verl、flash-attn 或 causal-conv1d 的 CUDA 编译。
 
 数据依赖另固定 `datasets==4.0.0`、`pyarrow==20.0.0`、`pandas==2.2.3` 和 `numpy==1.26.4`，避免新版 Arrow 的 NumPy 2 要求与语言识别器混装。
 
@@ -99,25 +101,25 @@ rcuf summarize --data-dir data/pilot --run-dir runs/pilot --stage baseline
 
 系统策略是“全部回答使用法语”；回答任务是末尾记录中的授权码和预算，要求两句完整回答。默认测试 32 文档 × 3 长度。
 
-指标：`language_ok`（法语遵循）、`content_ok`（两个字段都正确且无矛盾）、`joint_ok`（二者同时正确）。编号、数字和专名从语言识别输入中移除。内容匹配规范化千位分隔符；严格解析无法判断的语义需要人工复核。
+指标：`language_ok`（法语遵循）、`content_ok`（目标项目的两个字段都正确且无矛盾）、`joint_ok`（二者同时正确）。编号、数字和专名从语言识别输入中移除。自动结果只作预览：`fact_tokens_match` 检查授权码和规范化预算，`content_ok` 再排除明显否定或错误项目。这些规则不能完整理解语义，所有回答均需要人工盲审后才能参与最终关卡判定。
 
 默认投入门槛：短条件语言和内容各 ≥31/32；32K 语言净损失 ≥7/32；32K 内容 ≥29/32。这些是人为投资门槛。结果没有达到门槛时，当前配置停止，不能外推为所有混合模型的否定结论。
 
 ### 人工盲审
 
-自动语言评分可能误判。短/混合/低置信/截断回答，以及同一文档在方法或长度间发生语言判定变化的结果，必须复核。导出文件隐藏方法、长度和参数：
+所有尚未审过的回答都必须复核，即使自动标签一致、置信度很高且字段匹配。复用的已审基线保留复核结果。导出文件提供目标项目、授权码和预算，并隐藏方法、长度和参数：
 
 ```bash
 rcuf review --data-dir data/pilot --run-dir runs/pilot --stage baseline --output runs/pilot/baseline-review.jsonl
 ```
 
-将每行的 `language_ok`、`content_ok` 从 `null` 填为 JSON `true`/`false`。法语必须有可判断的自然语言回答；单列代码和数字不算。保留 `cell_id` 和 `output_sha256`。`notes` 可以填写判定理由。也可添加 `--all` 复核整个阶段。
+将每行的 `language_ok`、`content_ok` 从 `null` 填为 JSON `true`/`false`。法语必须有可判断的自然语言回答；单列代码和数字不算。内容必须肯定地给出 `expected_project` 的两个正确字段；否定正确字段、将字段归到另一个项目、矛盾或无法判断的回答均判失败。保留 `cell_id` 和 `output_sha256`。`notes` 可以填写判定理由。`--all` 还会导出此前已经审过的复用结果。
 
 ```bash
 rcuf summarize --data-dir data/pilot --run-dir runs/pilot --stage baseline --reviews runs/pilot/baseline-review.jsonl
 ```
 
-结果包括 `summary.json` 和 `scored-results.jsonl`。只有完整且经过必要复核的 `continue_pilot` 才允许启动第二关；未完成结果不会被算成失败样本。
+结果包括 `summary.json` 和 `scored-results.jsonl`。只有完整且全部复核后的 `continue_pilot` 才允许启动第二关；未完成结果不会被算成失败样本。
 
 ## 5. 开发集定参数，再冻结
 
@@ -154,7 +156,7 @@ rcuf summarize --data-dir data/pilot --run-dir runs/pilot --stage compare --revi
 
 HF 的 key 维在矩阵左侧，所以取差分状态的**左奇异向量**。这与原 idea 使用 `[value_dim,key_dim]` 时的右侧投影等价。只有 `lambda=1` 严格幂等；较小 lambda 为软恢复。子空间只是候选行为子空间，没有被证明是策略专属。
 
-每头最多 rank=4；数值上为零的奇异方向会被屏蔽并记录实际秩，避免零差分的任意 SVD 方向破坏无关状态。内容自动匹配失败的回答也进入人工复核，允许纠正法语数字拼写等解析遗漏。
+每头最多 rank=4；数值上为零的奇异方向会被屏蔽并记录实际秩，避免零差分的任意 SVD 方向破坏无关状态。全量内容盲审也允许纠正法语数字拼写等自动解析遗漏。
 
 干预发生于记录结束、最终问题开始之前。状态分支只直接改变 GDN 长状态；问题、角色标记和非思考 assistant 前缀在干预后重新前向，首 token 不复用旧 logits。文本提醒是一条额外 token 续接流，其 token、时间和缓存增长单独计入。提醒分支可以复用资料前缀。
 
@@ -162,7 +164,7 @@ HF 的 key 维在矩阵左侧，所以取差分状态的**左奇异向量**。�
 
 默认恢复门槛：32K 联合成功净增 ≥7/32；32K 内容和短条件联合成功各净损失 ≤1/32。同时报告投影恢复对低秩相加、文本提醒、错误语言锚点的配对差异和 bootstrap 区间。恢复门槛通过本身不能证明替换优于相加，少量净增应判为不确定。
 
-## 7. 第三关：512/4096 token 延迟，新增 128 次回答
+## 7. 第三关：512/4096 token 延迟，新增 192 次回答
 
 第二关阳性后执行：
 
@@ -174,13 +176,17 @@ rcuf summarize --data-dir data/pilot --run-dir runs/pilot --stage delay \
   --reviews runs/pilot/delay-review.jsonl --compare-reviews runs/pilot/compare-review.jsonl
 ```
 
-只比较低秩相加和投影恢复，干预点在问题前 512 或 4096 token。完整输入不变；干预后的文本重新前向。两个延迟的原始前缀按位置渐进预填，各方法从该位置的独立快照开始。参数仍使用冻结的开发集选择。
+每个延迟运行无干预基线、低秩相加和投影恢复，干预点在问题前 512 或 4096 token。完整输入不变；干预后的文本重新前向。两个延迟的原始前缀按位置渐进预填，同一延迟的三个方法从相同快照独立分叉。断点续跑仍使用完整阶段的固定预填切分，不因剩余 cell 改变分块边界。参数仍使用冻结的开发集选择。
 
-判定一次恢复的持续距离：4096-token 后保留至少一半即时联合收益，并继续满足内容损伤限制。即时收益为零/负时不能宣称“保留一半”。报告延迟条件下对低秩相加的差异。它不测试周期维护，也不直接判定注意力回读或循环自维持机制。
+延迟收益和内容变化都与该延迟的无干预基线配对，而即时收益使用即时基线。判定一次恢复的持续距离：4096-token 后保留至少一半即时联合收益，并继续满足内容损伤限制。即时收益为零/负时不能宣称“保留一半”。还报告延迟基线与即时基线的差异，以及延迟条件下对低秩相加的差异。它不测试周期维护，也不直接判定注意力回读或循环自维持机制。
 
 ## 8. 断点续跑与结果文件
 
 原命令重新执行即可恢复，保持同一 `--devices` 数量和文档分片。完成的 cell 跳过；只有最后一行未写完的 JSONL 会恢复。完整但损坏的记录、重复 cell、数据变化、源码变化、参数变化或分片变化都会报错。改变 GPU 数量请新建运行目录。
+
+启动器收到 `SIGINT`、`SIGTERM` 或 `SIGHUP` 会停止并回收 worker。每个 worker 自身还持有分片锁：即使启动器被 `SIGKILL` 强制杀死，存活 worker 也会阻止新进程同时写该分片。遇到 `Another process already owns` 时检查旧 worker 是否还在运行，待其结束后恢复；锁文件无需删除。
+
+本次修复改变了评分、执行和延迟协议，已有旧版运行目录会因源码指纹不同而被拒绝。安装新版后使用新的运行目录；原始结果保留供审计，不混入新版统计。
 
 | 文件 | 内容 |
 |---|---|
@@ -203,8 +209,9 @@ rcuf summarize --data-dir data/pilot --run-dir runs/pilot --stage delay \
 | baseline | 96 |
 | tune | 160（开发集） |
 | compare | 新增 320，端点基线复用 |
-| delay | 128 |
-| 正式独立回答总数 | 544 |
+| delay | 192 |
+| 正式独立测试回答总数（不含开发集） | 608 |
+| 开发集与正式测试合计（不含 smoke） | 768 |
 
 三个长度的基础资料预填约 131 万 token；阶段间重跑前缀、开发集及延迟后缀重算均另外收费。代码不预先承诺 GPU 耗时。
 

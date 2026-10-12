@@ -11,14 +11,13 @@ from pathlib import Path
 
 from .data import load_data
 from .io import bind_metadata, provenance
+from .processes import defer_termination, exclusive_lock, termination_signals
 from .runner import load_selection, require_previous_gate
 
 
 def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
-    selected_devices = devices.split(",")
-    if any(not device.strip() for device in selected_devices) or len(set(selected_devices)) != len(
-        selected_devices
-    ):
+    selected_devices = [device.strip() for device in devices.split(",")]
+    if any(not device for device in selected_devices) or len(set(selected_devices)) != len(selected_devices):
         raise ValueError("Specify distinct GPU IDs, e.g. --devices 0,1.")
     manifest, _ = load_data(data_dir)
     require_previous_gate(run_dir, stage, manifest)
@@ -34,14 +33,7 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
         load_selection(run_dir, manifest)
     stage_dir = run_dir / stage
     stage_dir.mkdir(parents=True, exist_ok=True)
-    # Prevent two launchers from writing the same result files. Lock disappears even if the process is killed.
-    import fcntl
-
-    with (stage_dir / "launcher.lock").open("a") as lock:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise RuntimeError("Another launcher already owns this stage.") from exc
+    with exclusive_lock(stage_dir / "launcher.lock"), termination_signals():
         processes = []
         streams = []
         try:
@@ -70,10 +62,11 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
                     "--shards",
                     str(len(selected_devices)),
                 ]
-                process = subprocess.Popen(
-                    command, env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True
-                )
-                processes.append(process)
+                with defer_termination():
+                    process = subprocess.Popen(
+                        command, env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True
+                    )
+                    processes.append(process)
                 print(f"{stage}: GPU {device} -> shard {shard}; log {stream.name}", flush=True)
             last_status = 0.0
             while any(process.poll() is None for process in processes):
@@ -100,12 +93,18 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
         finally:
             for process in processes:
                 if process.poll() is None:
-                    os.killpg(process.pid, signal.SIGTERM)
+                    try:
+                        os.killpg(process.pid, signal.SIGTERM)
+                    except ProcessLookupError:
+                        pass
             for process in processes:
                 try:
                     process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
-                    os.killpg(process.pid, signal.SIGKILL)
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
                     process.wait()
             for stream in streams:
                 stream.close()

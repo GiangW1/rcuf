@@ -8,6 +8,10 @@ from functools import lru_cache
 CODE = re.compile(r"\b[A-Z]{3}-\d{3}\b")
 IDENTIFIER = re.compile(r"\b[A-Za-z]{3,12}-\d{3}\b")
 NUMBER = re.compile(r"(?<![\w-])\d{1,3}(?:[ ,.\u00a0\u202f]\d{3})+(?!\d)|(?<![\w-])\d+(?!\w)")
+NEGATION = re.compile(
+    r"\b(?:not|incorrect|wrong|aucun|aucune|sans|faux|fausse|inconnu|inconnue|pas|jamais)\b",
+    re.IGNORECASE,
+)
 
 
 @lru_cache(maxsize=1)
@@ -21,12 +25,18 @@ def score(text: str, record: dict, truncated: bool = False) -> dict:
     clean = IDENTIFIER.sub(" ", text)
     numbers = [int(re.sub(r"\D", "", match.group())) for match in NUMBER.finditer(clean)]
     codes = CODE.findall(text)
-    content_ok = (
+    fact_tokens_match = (
         bool(codes)
         and set(codes) == {record["code"]}
         and bool(numbers)
         and set(numbers) == {record["budget"]}
     )
+    projects = [item for item in IDENTIFIER.findall(text) if item != record["code"]]
+    wrong_project = any(item != record["project"] for item in projects)
+    negation = bool(NEGATION.search(text))
+    # Token matches are a preliminary screen, not a semantic content judgment.
+    # Every final decision requires blind review, including apparently correct prose.
+    content_ok = fact_tokens_match and not wrong_project and not negation
     clean = NUMBER.sub(" ", clean)
     clean = re.sub(r"\b(?:EUR|euros?)\b", " ", clean, flags=re.IGNORECASE)
     words = re.findall(r"[^\W\d_]+", clean, flags=re.UNICODE)
@@ -40,7 +50,11 @@ def score(text: str, record: dict, truncated: bool = False) -> dict:
             sentence_languages.append({"language": lang, "confidence": probability})
             mixed |= lang != "fr" and probability >= 0.9
     language_ok = language == "fr" and not mixed and len(words) >= 4
-    reasons = []
+    reasons = ["semantic_content_requires_review"]
+    if wrong_project:
+        reasons.append("wrong_project_mentioned")
+    if negation:
+        reasons.append("negation_requires_review")
     if len(words) < 8:
         reasons.append("short_answer")
     if confidence < 0.9:
@@ -55,6 +69,8 @@ def score(text: str, record: dict, truncated: bool = False) -> dict:
         "language_ok": language_ok,
         "content_ok": content_ok,
         "joint_ok": language_ok and content_ok,
+        "fact_tokens_match": fact_tokens_match,
+        "projects_found": projects,
         "detected_language": language,
         "language_confidence": float(confidence),
         "sentence_languages": sentence_languages,

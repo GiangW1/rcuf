@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from rcuf.analysis import select, summarize
+from rcuf.analysis import export_reviews, select, summarize
 from rcuf.io import append_jsonl, digest, file_digest, load_config, provenance, read_jsonl, write_json
 from rcuf.runner import expected_cells, require_previous_gate
 
@@ -22,7 +22,7 @@ def make_data(tmp_path):
                     "doc_index": i,
                     "split": split,
                     "length": length,
-                    "target": {"code": "ZUM-482", "budget": 42700},
+                    "target": {"project": "VEGA-731", "code": "ZUM-482", "budget": 42700},
                 }
                 examples.append(row)
                 append_jsonl(data / "examples.jsonl", row)
@@ -95,6 +95,21 @@ def test_incomplete_and_unreviewed_results_cannot_unlock_next_stage(tmp_path):
         require_previous_gate(run, "tune", manifest)
 
 
+def test_confident_uniform_automatic_scores_still_require_review(tmp_path):
+    data, run, manifest, examples = make_data(tmp_path)
+    # Only the short-condition smoke stage: every automatic result is a confident success.
+    add_results(run, manifest, examples, "smoke")
+    report = summarize(data, run, "smoke")
+    assert report["decision"] == "pending_review"
+    path = run / "reviews.jsonl"
+    count = export_reviews(data, run, "smoke", path)
+    assert count == report["rows"]
+    for review in read_jsonl(path):
+        assert review["expected_project"] == "VEGA-731"
+        assert "method" not in review and "length" not in review
+    assert summarize(data, run, "smoke", reviews_for(run, "smoke"))["decision"] == "ready"
+
+
 def test_complete_reviewed_pipeline_freezes_dev_selection_and_compares_delays(tmp_path):
     data, run, manifest, examples = make_data(tmp_path)
     add_results(run, manifest, examples, "baseline")
@@ -116,8 +131,38 @@ def test_complete_reviewed_pipeline_freezes_dev_selection_and_compares_delays(tm
     delayed = summarize(data, run, "delay", reviews_for(run, "delay"), compare_reviews)
     assert delayed["decision"] == "continue_pilot"
     assert delayed["delayed"][-1]["recovery"]["net_gains"] == 2
+    assert delayed["delayed"][-1]["baseline_vs_immediate_baseline"]["net_gains"] == 0
     modified = deepcopy(tuned)
     modified["split"] = "test"
     write_json(run / "selection.json", modified)
     with pytest.raises(ValueError):
         summarize(data, run, "delay")
+
+
+def test_delayed_gain_uses_same_cut_control_not_immediate_baseline(tmp_path):
+    data, run, manifest, examples = make_data(tmp_path)
+    add_results(run, manifest, examples, "baseline")
+    summarize(data, run, "baseline", reviews_for(run, "baseline"))
+    add_results(run, manifest, examples, "tune")
+    tuned = select(data, run, reviews_for(run, "tune"))
+    add_results(run, manifest, examples, "compare", tuned)
+    compare_reviews = reviews_for(run, "compare")
+    summarize(data, run, "compare", compare_reviews)
+    add_results(run, manifest, examples, "delay", tuned)
+    delay_reviews = run / "delay-reviewed.jsonl"
+    for row in read_jsonl(run / "delay" / "results-0.jsonl"):
+        # Synthetic control-path change: all no-op and repaired answers now succeed.
+        append_jsonl(
+            delay_reviews,
+            {
+                "cell_id": row["cell_id"],
+                "output_sha256": row["output_sha256"],
+                "language_ok": True,
+                "content_ok": True,
+            },
+        )
+    report = summarize(data, run, "delay", delay_reviews, compare_reviews)
+    assert report["immediate_recovery"]["net_gains"] == 2
+    assert report["delayed"][-1]["recovery"]["net_gains"] == 0
+    assert report["delayed"][-1]["baseline_vs_immediate_baseline"]["net_gains"] == 2
+    assert report["decision"] == "stop_current_configuration"

@@ -20,6 +20,7 @@ from .io import (
     recover_jsonl,
     write_json,
 )
+from .processes import exclusive_lock
 from .scoring import score
 from .state import clone_cache, edit_cache
 
@@ -63,9 +64,13 @@ def method_specs(stage: str, config: dict, length: int, selection: dict | None =
         if length != config["lengths"][-1]:
             return []
         return [
-            {"method": method, "strength": selection["strengths"][method], "delay": delay}
+            {
+                "method": method,
+                "strength": 0.0 if method == "baseline" else selection["strengths"][method],
+                "delay": delay,
+            }
             for delay in config["delays"]
-            for method in ("add_lowrank", "replace")
+            for method in ("baseline", "add_lowrank", "replace")
         ]
     raise ValueError(f"Unknown stage: {stage}")
 
@@ -132,6 +137,23 @@ def require_previous_gate(run_dir: Path, stage: str, manifest: dict) -> None:
 def run_worker(data_dir: Path, run_dir: Path, stage: str, shard: int, shards: int) -> None:
     if stage not in STAGES or not 0 <= shard < shards:
         raise ValueError("Invalid stage/shard.")
+    # This lease belongs to the worker, so even a SIGKILLed launcher cannot allow
+    # a replacement worker to overwrite an orphan that is still writing results.
+    with exclusive_lock(run_dir / stage / f"worker-{shard}.lock"):
+        _run_worker(data_dir, run_dir, stage, shard, shards)
+
+
+def intervention_cuts(stage: str, config: dict, example: dict, selection: dict | None) -> list[int]:
+    # Freeze the prefill schedule independently of which cells remain after resuming.
+    return sorted(
+        {
+            example["question_cut"] - spec["delay"]
+            for spec in method_specs(stage, config, example["length"], selection)
+        }
+    )
+
+
+def _run_worker(data_dir: Path, run_dir: Path, stage: str, shard: int, shards: int) -> None:
     started = time.perf_counter()
     manifest, examples = load_data(data_dir)
     config = manifest["config"]
@@ -232,7 +254,7 @@ def run_worker(data_dir: Path, run_dir: Path, stage: str, shard: int, shards: in
     cumulative_prefix_tokens = 0
     for example, entries in groups.values():
         ids = example["input_ids"]
-        cut_positions = sorted({example["question_cut"] - spec["delay"] for _, spec in entries})
+        cut_positions = intervention_cuts(stage, config, example, selection)
         last_cut = 0
         original_snapshot = None
         for cut in cut_positions:

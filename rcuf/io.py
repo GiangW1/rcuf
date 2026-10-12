@@ -107,7 +107,13 @@ def load_config(path: str | Path) -> dict:
     lengths = config["lengths"]
     if lengths != sorted(set(lengths)) or len(lengths) != 3 or lengths[0] != 0:
         raise ValueError("This pilot requires three distinct sorted lengths, starting with zero.")
-    if config["rank"] <= 0 or any(d <= 0 or d >= lengths[-1] for d in config["delays"]):
+    delays = config["delays"]
+    if (
+        config["rank"] <= 0
+        or not delays
+        or delays != sorted(set(delays))
+        or any(d <= 0 or d >= lengths[-1] for d in delays)
+    ):
         raise ValueError("Invalid rank or delays.")
     if config["dev_documents"] < 1 or config["test_documents"] < 1:
         raise ValueError("Both splits need documents.")
