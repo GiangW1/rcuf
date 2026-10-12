@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "model": "Qwen/Qwen3.5-4B",
+  "model_revision": "main",
+  "dataset": "wikimedia/wikipedia",
+  "dataset_config": "20231101.en",
+  "dataset_revision": "main",
+  "seed": 1729,
+  "dev_documents": 2,
+  "test_documents": 2,
+  "lengths": [0, 128, 256],
+  "delays": [16, 32],
+  "rank": 4,
+  "gamma_grid": [0.25, 1.0, 4.0],
+  "lambda_grid": [0.25, 0.5, 1.0],
+  "max_new_tokens": 128,
+  "prefill_chunk_size": 128,
+  "attention_backend": "sdpa",
+  "delta_backend": "fla",
+  "snapshot_device": "cpu",
+  "bootstrap_samples": 1000,
+  "gates": {
+    "short_min_successes": 2,
+    "drift_min_net_losses": 1,
+    "long_min_content_successes": 2,
+    "repair_min_net_gains": 1,
+    "max_content_net_losses": 0,
+    "max_short_joint_net_losses": 0,
+    "delay_min_retained_gain_fraction": 0.5
+  }
+}
+

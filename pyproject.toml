@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rcuf"
+version = "0.1.0"
+description = "Instruction lifetime and recurrent-state recovery kill test for Qwen3.5"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "numpy==1.26.4",
+  "transformers==5.19.0",
+  "langid==1.1.6",
+  "datasets==4.0.0",
+  "pyarrow==20.0.0",
+  "pandas==2.2.3",
+]
+
+[project.optional-dependencies]
+cpu = ["torch==2.8.0"]
+gpu = ["torch==2.8.0", "flash-linear-attention==0.5.2"]
+dev = ["pytest>=8,<9", "ruff>=0.12"]
+
+[project.scripts]
+rcuf = "rcuf.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["rcuf*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+
