@@ -4,11 +4,15 @@
 
 默认模型仍为固定版本的 `Qwen/Qwen3.5-4B`，不是纯 Transformer 的 `Qwen3-4B`。两张 A100 80GB 各运行一份模型，按文档编号奇偶分工；同一文档的所有条件在同一张卡上运行，每次回答都从 token 0 独立预填。无训练、无 DDP、无 tensor parallel。两关最多 **480 条正式回答**；不增加调参集或独立 smoke 回答。每个 worker 仍先执行实际缓存路径检查，失败即停止。
 
+**当前协议为 v2。** PR3 复审修复了混合语言背景漏检、生成截断造成的假阳性、复核文件静默回退和跨阶段续跑问题。请重新制备到下方 `*-v2` 目录；已生成的 v1 数据/结果保留原样，不能续接或混入 v2。模型、样本量、长度、提问因素及效应门槛不变，新增材料分块语言审核及零生成截断的有效性要求。
+
+**当前不能直接开跑：默认语料不足。** 对固定 OPUS Books 全量源进行 v2 规则重筛，即使检查更短完整窗口并允许整对列方向校正，也只找到 **14 组**合格材料，少于登记的 16 组。默认 `controls-prepare` 现在会在下载/模型加载前明确拒绝运行。需要先批准扩充或更换平行语料并验证至少 16 组合格材料；不降低样本量、不放宽长度/纯度、不复用 v1 混合语言样本。下面的运行流程以这一数据阻断已解决为前提，不代表当前默认配置可用。
+
 ## 1. 固定设计
 
 | 因素 | 语言关 A | 格式关 B |
 |---|---|---|
-| 独立材料 | 16 组新英法对齐片段及新随机记录 | 同一组材料及记录 |
+| 配对材料 | 16 组新英法对齐片段及新随机记录 | 同一组材料及记录 |
 | system 规则 | 英语 / 法语 / 不指定输出语言 | 严格 JSON / 严格 XML |
 | 背景 | 无背景 / 英语约 8K / 同义法语约 8K | 同左 |
 | 最终提问 | 英语 / 法语，询问相同两个字段 | 同左 |
@@ -24,9 +28,11 @@ JSON 必须恰好包含 `code`（字符串）和 `budget_eur`（整数）；XML 
 
 默认读取 [Helsinki-NLP/opus_books 的 en-fr 数据](https://huggingface.co/datasets/Helsinki-NLP/opus_books)，固定 revision `1f9f6191d0e91a3c539c2595e2fe48fc1420de9b`、Parquet 文件及其 SHA256。它提供逐单元英法对齐文本，**不是分别抽两批独立文章**。
 
-程序沿源顺序收集完整对齐单元，要求两种实际文本都处于 **7783–8601 token**，组内长度差除以较长一边不超过 5%。不单独截断某种语言、不添加填充。检测到明显指令改写、特殊角色 token 或格式示例时清空窗口；两边整段语言识别置信度须 ≥0.98。合格窗口不复用源单元 ID，全部扫描完成后固定 seed 抽取 16 组。条件不足直接报错，不自动放宽长度、换 seed 或改任务。
+程序沿源顺序收集完整对齐单元，要求两种实际文本都处于 **7783–8601 token**，组内长度差除以较长一边不超过 5%。不单独截断某种语言、不添加填充。检测到明显指令改写、特殊角色 token 或格式示例时清空窗口。两边须同时通过整段和 **256-token 分块**的语言检查，每块都须识别为对应语言且置信度 ≥0.98；不足 128 token 的尾块并入上一块，不漏检尾部。
 
-本地用正式固定 tokenizer 已完成一次完整制备：找到 17 个合格窗口，选出 16 组并生成全部 480 个官方模板输入。此检查**没有运行 4B 模型，也没有产生实验结果**。
+数据源部分书籍的列语言方向反转：只有整对的语言识别均高置信度反向时，才交换**整对**原文列，并再次执行所有分块检查；保存 `source_columns` 记录，原文没有改写。片段内部混合语言仍不合格，不逐段拼凑/交换，不做机器翻译。每个位置除检查最长窗口外，也通过同时移除两边相同的完整对齐单元检查更短后缀，避免漏掉符合长度条件的窗口；仍不单侧截断。合格窗口不复用源单元 ID，全部扫描完成后固定 seed 抽取 16 组。条件不足直接报错，不自动放宽长度、换 seed 或改任务。
+
+v1 的数据审查发现 3/16 组含连续大段异语文本（原 `controls-003`、`controls-011`、`controls-015`），虽然整段分类通过，也不能用于纯英/法背景对照。因此 v1 的“17 个合格窗口”不作为 v2 的有效性证据。全量 v2 筛选结果为 14 组，不足 16；未生成正式 v2 输入或模型回答。v2 保存完整分块检测记录并检查覆盖范围，仍需人工检查语义对齐。这些制备检查**不运行 4B 模型，也不产生实验结果**。
 
 注意三个限制：
 
@@ -51,16 +57,18 @@ L_doc = mean over background∈{en,fr}, question∈{en,fr}
 
 每关必须同时满足：
 
-1. 每个短条件的“显式规则 × 提问语言”格均至少 **15/16 联合成功**。
-2. 每个“规则 × 背景 × 提问语言”格至少 **15/16 内容正确**，语言关包括无语言规则条件。事实能力下降时不能归因于指令维护。
-3. 文档平均控制损失 **≥25 个百分点**。
-4. 至少 **4 个文档**的净控制损失为正。
-5. 两种提问语言各自的平均控制损失均 **>0**。
+1. **没有生成截断。** 任一回答达到上限而未观察到结束 token，该关即标为 `*_generation_censored`，不能判为规则失守，也不能判为“只有语言效应”。各格截断数单独报告；此时数值损失仅为描述值，标记 `descriptive_only_censored`，不作机制或生死归因。不能删去这些回答或用复核标签将截断改为正常结束。若需增加预算，应另行登记完整实验，不挑样本补跑。
+2. 每个短条件的“显式规则 × 提问语言”格均至少 **15/16 联合成功**。
+3. 每个“规则 × 背景 × 提问语言”格至少 **15/16 内容正确**，语言关包括无语言规则条件。事实能力下降时不能归因于指令维护。
+4. 文档平均控制损失 **≥25 个百分点**。
+5. 至少 **4 个文档**的净控制损失为正。
+6. 两种提问语言各自的平均控制损失均 **>0**。
 
 A 过关才能启动 B。自动评分只决定是否暂时继续省算力，**不是最终科研结论**。如果 A 因自动误判停下，允许用绑定原答案的盲审标签纠正再启动 B；不允许改样本、长度、指标或门槛来救结果。若盲审推翻 A 的阳性，即便已跑 B 也不能宣称通过两关。
 
 | 复核后结果 | 解释与行动 |
 |---|---|
+| 任一关出现生成截断 | 生成预算导致结果不完整，不能判断该关的指令维护效应 |
 | A 短任务或事实保持不合格 | 任务无效，先查任务/评分，不能归因于维护失效 |
 | A 有能力且保住事实，但未达效应门槛 | 本批控制下未复现足够强的语言规则损失，停止状态修复主线扩张 |
 | A 通过、B 的能力或事实保持不合格 | 非语言关不能用于归因，不能称为语言特有或一般维护失效 |
@@ -71,7 +79,7 @@ A 过关才能启动 B。自动评分只决定是否暂时继续省算力，**�
 
 ## 4. 服务器运行：两张 A100 80GB
 
-在本 PR 分支、仓库根目录执行。可沿用之前经过检查的 `rcuf` 环境；新建环境的 CUDA/FLA 安装步骤见主 README。不要改 Grace 环境。
+**先解决上述语料阻断，再运行此节。** 以下示例假设已批准并验证一个足量的本地平行 JSONL，路径需替换为实际路径。在本 PR 分支、仓库根目录执行。可沿用之前经过检查的 `rcuf` 环境；新建环境的 CUDA/FLA 安装步骤见主 README。不要改 Grace 环境。
 
 ```bash
 conda activate rcuf
@@ -82,11 +90,12 @@ python -m pytest
 python scripts/doctor.py
 
 python -m rcuf.cli controls-prepare \
-  --data-dir data/language-controls-v1
+  --parallel-corpus-jsonl /absolute/path/to/approved-en-fr.jsonl \
+  --data-dir data/language-controls-v2
 
 python -m rcuf.cli controls-launch \
-  --data-dir data/language-controls-v1 \
-  --run-dir runs/language-controls-v1 \
+  --data-dir data/language-controls-v2 \
+  --run-dir runs/language-controls-v2 \
   --phase all --devices 0,1
 ```
 
@@ -94,42 +103,44 @@ python -m rcuf.cli controls-launch \
 
 `--phase all` 顺序跑 A、暂定门槛通过后再跑 B；A 未过会保存汇总并报错，**不会启动 B**。默认不指定 `--phase` 则只跑 A，适合先人工复核再决定 B。终端建议放在 tmux 中。启动器每约 30 秒报告 worker 状态，逐条进度在 `language/worker-*.log`、`format/worker-*.log`；一边失败会停止另一边。
 
-断点续跑：不修改源码、准备数据、依赖环境和卡序，重跑同一条 launch 命令即可。已完成条件不会再生成；不完整的最后一行可恢复，已完成行损坏会报错。运行目录绑定源码、输入、运行时、GPU UUID 和逐行输出哈希；使用不同配置或不同物理 GPU 请另开运行目录。GPU 显存/耗时会记录，但本地未实测 A100 4B 性能，不承诺运行时长。
+断点续跑：不修改源码、准备数据、依赖环境和卡序，重跑同一条 launch 命令即可。已完成条件不会再生成；启动器在汇总任何阶段前，先持相应 worker/GPU 锁恢复各阶段不完整的最后一行，已完成行损坏会报错；仍存活的 worker 持锁时拒绝修改其文件。运行目录绑定源码、输入、运行时、GPU UUID 和逐行输出哈希；使用不同配置或不同物理 GPU 请另开运行目录。GPU 显存/耗时会记录，但本地未实测 A100 4B 性能，不承诺运行时长。
 
 ## 5. 盲审、阶段救回与结果交付
 
 ```bash
 python -m rcuf.cli controls-summarize \
-  --data-dir data/language-controls-v1 --run-dir runs/language-controls-v1
+  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2
 
 python -m rcuf.cli controls-review \
-  --data-dir data/language-controls-v1 --run-dir runs/language-controls-v1 \
-  --output runs/language-controls-v1/review-unlabeled.jsonl
+  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2 \
+  --output runs/language-controls-v2/review-unlabeled.jsonl
 ```
 
 导出文件随机顺序，隐藏 system 目标、背景/问题条件和自动分数，只展示答案与正确记录。请保留 `cell_id`、`output_sha256`、`answer`、`expected_target`，填写：
 
 - `content_ok`: JSON 布尔值。两个字段均准确、肯定地给出且无矛盾/错误项目才为真；仅出现正确数字或代码不算。缺失字段、否定正确答案、附加错误金额均为假。
 - `response_language`: `en` / `fr` / `mixed` / `other` / `unknown`。忽略项目 ID、代码、数字及 EUR；明显混合完整英文/法语片段用 `mixed`，没有足够自然语言证据用 `unknown`。纯 JSON/XML 可留空，语言关必须填。
-- `reviewer_type`: `human` 或 `model`；`reviewer_id`: 实际复核者标识。LLM 复核必须标记 `model`，不能伪装人工。格式结构严格由解析器决定，不通过主观标签放宽。
+- `reviewer_type`: `human` 或 `model`；`reviewer_id`: 实际复核者标识。LLM 复核必须标记 `model`，不能伪装人工。格式结构严格由解析器决定，不通过主观标签放宽；对合法 JSON/XML，内容标签必须与两个字段的精确比较一致，矛盾标签会报错。
 
 `langid` 只提供初筛，短句/混合语言、事实否定都可能误判。正式结论要求本次**全部已生成答案**有人工标签；仅模型标签或部分人工标签时，`decision` 保持 `pending_human_review`。不要把自动 `provisional_interpretation` 当成最终结论。
+
+显式提供 `--reviews` 时，文件不存在会立即报错，不能退回自动评分。summary 可展示部分复核的进度；但用复核标签启动 B 时必须完整填写全部 288 条 A 标签，不能只复核有利样本。文件哈希从实际参与评分的同一份内存快照计算，避免编辑过程中分数与标签指纹不一致。
 
 将填写后的标签另存为 `review-filled.jsonl`：
 
 ```bash
 python -m rcuf.cli controls-summarize \
-  --data-dir data/language-controls-v1 --run-dir runs/language-controls-v1 \
-  --reviews runs/language-controls-v1/review-filled.jsonl
+  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2 \
+  --reviews runs/language-controls-v2/review-filled.jsonl
 ```
 
 如果只跑过 A，且人工复核后的 A 达标，可继续：
 
 ```bash
 python -m rcuf.cli controls-launch \
-  --data-dir data/language-controls-v1 --run-dir runs/language-controls-v1 \
+  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2 \
   --phase format --devices 0,1 \
-  --reviews runs/language-controls-v1/review-filled.jsonl
+  --reviews runs/language-controls-v2/review-filled.jsonl
 ```
 
 B 的首次启动把门槛来源与复核文件哈希写入 `format-gate.json`。续跑 B 必须使用相同参数和**未修改的该文件**。全部生成后，用新的 `--output` 路径导出 480 行复核表；已有 A 标签可按 `cell_id` 转移，保持答案/哈希/目标绑定，补齐 B 内容标签，再用新的完整复核文件做最终 summarize。原始复核文件不可覆盖，也不要修改已经用于 B 续跑的标签文件。

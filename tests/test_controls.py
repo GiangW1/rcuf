@@ -6,7 +6,14 @@ from pathlib import Path
 import pytest
 from test_hf_continuation import tiny_engine
 
-from rcuf.controls import cells, context, generate_answer, require_language_gate, validated_results
+from rcuf.controls import (
+    cells,
+    context,
+    generate_answer,
+    launch_controls,
+    require_language_gate,
+    validated_results,
+)
 from rcuf.controls_analysis import apply_reviews, evaluate_family, review_export, summarize
 from rcuf.controls_data import BACKGROUND, POLICIES, QUESTIONS, collect_pairs, load_controls, validate_config
 from rcuf.controls_scoring import parse_format, score
@@ -60,6 +67,14 @@ def sealed_data(directory):
                 "doc_index": i,
                 "texts": {lang: f"fixture {i} {lang}" for lang in QUESTIONS},
                 "tokens": {lang: 8192 for lang in QUESTIONS},
+                "language_blocks": {
+                    lang: [
+                        {"start": start, "end": start + 256, "language": lang, "confidence": 1.0}
+                        for start in range(0, 8192, 256)
+                    ]
+                    for lang in QUESTIONS
+                },
+                "source_columns": {lang: lang for lang in QUESTIONS},
                 "units": [{"id": str(i), "sha256": digest(i)}],
             }
             for i in range(16)
@@ -90,7 +105,7 @@ def test_registered_design_and_frozen_crossing(tmp_path):
     write_jsonl(tmp_path / "examples.jsonl", rows)
     with pytest.raises(ValueError, match="fingerprint"):
         load_controls(tmp_path)
-    assert manifest["protocol"] == "rcuf-language-controls-v1"
+    assert manifest["protocol"] == "rcuf-language-controls-v2"
 
 
 @pytest.mark.parametrize(
@@ -201,6 +216,28 @@ def test_effect_from_only_one_query_language_does_not_pass():
     assert not report["eligible"] and not report["conditions"]["both_query_languages_decline"]
 
 
+@pytest.mark.parametrize("family", ["language", "format"])
+def test_token_budget_censoring_cannot_count_as_instruction_loss(family):
+    rows = labeled_rows(False)
+    for r in rows:
+        if r["family"] != family:
+            continue
+        if r["policy"] != "none":
+            r["scores"].update(rule_ok=True, joint_ok=True)
+            if family == "language":
+                r["scores"]["response_language"] = r["policy"]
+        if r["background"] != "none":
+            r["truncated"] = True
+            if r["policy"] != "none":
+                r["scores"].update(rule_ok=False, joint_ok=False)
+    report = evaluate_family(rows, config(), family)
+    assert report["mean_control_loss"] == 1.0
+    assert report["conditions"]["short_capable"] and report["conditions"]["content_preserved"]
+    assert not report["eligible"] and not report["conditions"]["uncensored_generation"]
+    assert report["control_loss_status"] == "descriptive_only_censored"
+    assert report["truncated_answers"] == (192 if family == "language" else 128)
+
+
 def reviews(rows, reviewer_type="model"):
     return [
         {
@@ -300,6 +337,122 @@ def test_language_gate_cannot_be_bypassed_by_missing_or_reviewed_failed_rows(tmp
         require_language_gate(data, run, review_path)
 
 
+def test_missing_requested_reviews_fail_before_any_gpu_launch(tmp_path, monkeypatch):
+    import rcuf.launch as module
+
+    def unexpected_launch(*args, **kwargs):
+        pytest.fail("A missing explicit review file must fail before GPU launch.")
+
+    monkeypatch.setattr(module, "launch", unexpected_launch)
+    missing = tmp_path / "missing.jsonl"
+    with pytest.raises(ValueError, match="Review file does not exist"):
+        apply_reviews(labeled_rows(), missing)
+    with pytest.raises(ValueError, match="Review file does not exist"):
+        launch_controls(tmp_path / "data", tmp_path / "run", "all", "0,1", missing)
+
+
+@pytest.mark.parametrize("review_count", [0, 1, 287])
+def test_partial_requested_reviews_cannot_open_format_gate(tmp_path, review_count):
+    data, run = tmp_path / "data", tmp_path / "run"
+    stored_run(data, run)
+    raw = validated_results(data, run, phases=("language",))[1]
+    path = tmp_path / "partial.jsonl"
+    write_jsonl(path, reviews(raw[:review_count], "human"))
+    with pytest.raises(ValueError, match="Complete all 288 language reviews"):
+        require_language_gate(data, run, path)
+
+
+def test_review_hash_binds_the_labels_actually_scored(tmp_path, monkeypatch):
+    import rcuf.controls_analysis as module
+
+    data, run = tmp_path / "data", tmp_path / "run"
+    stored_run(data, run)
+    labels = reviews(validated_results(data, run)[1], "human")
+    path = tmp_path / "reviews.jsonl"
+    write_jsonl(path, labels)
+    original = module.evaluate_family
+
+    def edit_after_review_read(*args, **kwargs):
+        write_jsonl(path, [])  # Simulate an editor saving while summary is computed.
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "evaluate_family", edit_after_review_read)
+    report = summarize(data, run, path)
+    assert report["human_review_complete"]
+    assert report["reviews_sha256"] == digest(labels)
+    assert report["reviews_sha256"] != digest(read_jsonl(path))
+
+
+@pytest.mark.parametrize("policy", ["json", "xml"])
+def test_review_cannot_override_exact_structured_facts(tmp_path, policy):
+    row = next(r for r in labeled_rows() if r["family"] == "format" and r["policy"] == policy)
+    row["text"] = (
+        '{"code":"ZUM-482","budget_eur":42800}'
+        if policy == "json"
+        else "<answer><code>ZUM-482</code><budget_eur>42800</budget_eur></answer>"
+    )
+    row["output_sha256"] = digest(row["text"])
+    row["scores"] = score(row["text"], row)
+    labels = reviews([row], "human")
+    labels[0]["content_ok"] = True
+    path = tmp_path / "wrong-fact-label.jsonl"
+    write_jsonl(path, labels)
+    with pytest.raises(ValueError, match="contradicts exact structured facts"):
+        apply_reviews([row], path)
+
+
+@pytest.mark.parametrize("family", ["language", "format"])
+def test_summary_reports_censoring_instead_of_positive_or_language_only(tmp_path, family):
+    data, run = tmp_path / "data", tmp_path / "run"
+    stored_run(data, run)
+    path = run / family / "results-0.jsonl"
+    rows = read_jsonl(path)
+    rows[-1]["truncated"] = True
+    rows[-1]["row_sha256"] = digest({k: v for k, v in rows[-1].items() if k != "row_sha256"})
+    write_jsonl(path, rows)
+    report = summarize(data, run)
+    assert report["provisional_interpretation"] == f"{family}_generation_censored"
+
+
+def test_all_phase_resume_recovers_format_tail_before_language_summary(tmp_path, monkeypatch):
+    import rcuf.launch as module
+
+    data, run = tmp_path / "data", tmp_path / "run"
+    stored_run(data, run)
+    path = run / "format/results-0.jsonl"
+    original = path.read_bytes()
+    complete_rows = read_jsonl(path)
+    write_jsonl(path, complete_rows[:-1])
+    recovered_prefix = path.read_bytes()
+    path.write_bytes(recovered_prefix + b'{"cell_id":')
+    calls = []
+
+    def finish_missing_cell(data, run, step, *args, **kwargs):
+        calls.append(step)
+        assert path.read_bytes() == recovered_prefix
+        if step == "format":
+            write_jsonl(path, complete_rows)
+
+    monkeypatch.setattr(module, "launch", finish_missing_cell)
+    launch_controls(data, run, "all", "0,1")
+    assert calls == ["language", "format"]
+    assert path.read_bytes() == original
+    assert read_json(run / "controls-summary.json")["complete"]
+
+
+def test_resume_does_not_repair_a_live_workers_file(tmp_path):
+    from rcuf.processes import exclusive_lock
+
+    data, run = tmp_path / "data", tmp_path / "run"
+    stored_run(data, run)
+    path = run / "format/results-0.jsonl"
+    interrupted = path.read_bytes() + b'{"cell_id":'
+    path.write_bytes(interrupted)
+    with exclusive_lock(run / "format/worker-0.lock"), pytest.raises(RuntimeError, match="already owns"):
+        launch_controls(data, run, "all", "0,1")
+    assert path.read_bytes() == interrupted
+
+
 def test_background_pair_reuse_rejected_even_with_resealed_files(tmp_path):
     manifest, _ = sealed_data(tmp_path)
     pairs = read_jsonl(tmp_path / "backgrounds.jsonl")
@@ -368,6 +521,9 @@ def test_collect_pairs_preserves_whole_units_and_does_not_reuse_them(monkeypatch
         def encode(self, text, **kwargs):
             return list(text)
 
+        def decode(self, ids):
+            return "".join(ids)
+
     class Identifier:
         def classify(self, text):
             return ("en" if text.startswith("English") else "fr", 1.0)
@@ -390,3 +546,100 @@ def test_collect_pairs_preserves_whole_units_and_does_not_reuse_them(monkeypatch
     assert {p["units"][0]["id"] for p in selected} == {str(i) for i in range(16)}
     assert all(p["tokens"] == {"en": 80, "fr": 80} for p in selected)
     assert all(p["texts"]["en"] in {r["translation"]["en"] for r in source} for p in selected)
+
+
+def test_paired_background_audit_rejects_mixing_and_records_whole_pair_reversal(monkeypatch):
+    import rcuf.scoring as module
+
+    class Tokenizer:
+        all_special_ids = ()
+
+        def encode(self, text, **kwargs):
+            return list(text)
+
+        def decode(self, ids):
+            return "".join(ids)
+
+    class Identifier:
+        def classify(self, text):
+            return ("en" if text.count("E") >= text.count("F") else "fr", 1.0)
+
+    monkeypatch.setattr(module, "language_identifier", Identifier)
+    cfg = dict(config(), documents=1, target_tokens=80, language_audit_chunk_tokens=16)
+    source = [
+        {"id": "mixed", "translation": {"en": "E" * 64 + "F" * 16, "fr": "F" * 64 + "E" * 16}},
+        {"id": "reversed", "translation": {"en": "F" * 80, "fr": "E" * 80}},
+    ]
+    selected, count = collect_pairs(iter(source), Tokenizer(), cfg)
+    assert count == 1
+    assert selected[0]["units"][0]["id"] == "reversed"
+    assert selected[0]["texts"] == {"en": "E" * 80, "fr": "F" * 80}
+    assert selected[0]["source_columns"] == {"en": "fr", "fr": "en"}
+    assert all(b["language"] == "en" for b in selected[0]["language_blocks"]["en"])
+
+
+def test_incomplete_language_audit_rejected_even_with_resealed_files(tmp_path):
+    manifest, _ = sealed_data(tmp_path)
+    path = tmp_path / "backgrounds.jsonl"
+    pairs = read_jsonl(path)
+    pairs[0]["language_blocks"]["en"].pop()
+    write_jsonl(path, pairs)
+    manifest["backgrounds_sha256"] = file_digest(path)
+    manifest["manifest_sha256"] = digest({k: v for k, v in manifest.items() if k != "manifest_sha256"})
+    write_json(tmp_path / "manifest.json", manifest)
+    with pytest.raises(ValueError, match="does not cover"):
+        load_controls(tmp_path)
+
+
+def test_shorter_whole_pair_suffix_is_checked_when_longest_window_fails(monkeypatch):
+    import rcuf.scoring as module
+
+    class Tokenizer:
+        all_special_ids = ()
+
+        def encode(self, text, **kwargs):
+            return list(text.replace("\n", ""))
+
+        def decode(self, ids):
+            return "".join(ids)
+
+    class Identifier:
+        def classify(self, text):
+            return ("en" if "E" in text else "fr", 1.0)
+
+    monkeypatch.setattr(module, "language_identifier", Identifier)
+    cfg = dict(config(), documents=1, target_tokens=80)
+    source = [
+        {"id": "unbalanced-prefix", "translation": {"en": "E" * 6, "fr": "F"}},
+        {"id": "balanced-suffix", "translation": {"en": "E" * 76, "fr": "F" * 76}},
+    ]
+    selected, count = collect_pairs(iter(source), Tokenizer(), cfg)
+    assert count == 1 and selected[0]["tokens"] == {"en": 76, "fr": 76}
+    assert [u["id"] for u in selected[0]["units"]] == ["balanced-suffix"]
+
+
+def test_whole_passage_label_cannot_replace_registered_language_blocks(tmp_path):
+    manifest, _ = sealed_data(tmp_path)
+    path = tmp_path / "backgrounds.jsonl"
+    pairs = read_jsonl(path)
+    pairs[0]["language_blocks"]["en"] = [{"start": 0, "end": 8192, "language": "en", "confidence": 1.0}]
+    write_jsonl(path, pairs)
+    manifest["backgrounds_sha256"] = file_digest(path)
+    manifest["manifest_sha256"] = digest({k: v for k, v in manifest.items() if k != "manifest_sha256"})
+    write_json(tmp_path / "manifest.json", manifest)
+    with pytest.raises(ValueError, match="unregistered block sizes"):
+        load_controls(tmp_path)
+
+
+def test_known_insufficient_default_corpus_fails_before_download(tmp_path, monkeypatch):
+    from transformers import AutoTokenizer
+
+    from rcuf.controls_data import prepare
+
+    def unexpected_download(*args, **kwargs):
+        pytest.fail("Known insufficient corpus must fail before any model/tokenizer download.")
+
+    monkeypatch.setattr(AutoTokenizer, "from_pretrained", unexpected_download)
+    with pytest.raises(ValueError, match="Default corpus is blocked.*14.*16"):
+        prepare(config(), tmp_path / "new-data")
+    assert not (tmp_path / "new-data").exists()

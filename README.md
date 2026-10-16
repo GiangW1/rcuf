@@ -12,6 +12,10 @@
 
 **当前下一轮：** [先排除语言倾向，再检验 JSON/XML 规则的两关生死实验](docs/language-controls.md)。16 组新英法对齐材料，语言关 288 条、过关后格式关 192 条；使用 `controls-prepare` / `controls-launch` / `controls-summarize`。固定两张卡、阶段门槛与人工复核，不进行状态干预。
 
+PR3 复审后的 controls 协议为 **v2**：增加背景分块语言审核、截断有效性门槛，修复复核输入与跨阶段续跑问题。请使用新 `data/language-controls-v2` / `runs/language-controls-v2` 目录，不能与 v1 混跑。
+
+**PR3 当前有数据阻断，暂不能直接开跑：** 默认 OPUS Books 全量严格筛选只剩 14 组合格材料，不足预设 16 组。程序明确拒绝默认制备；需先确认扩充/替换语料，不降低门槛或混入旧的双语背景。
+
 **上一轮最小确认：** [两卡交叉复跑、独立英/法资料与等幅度干预](docs/confirmation.md)。固定先导参数，768 条正式回答 + 6 条 smoke；使用 `confirm-*` 命令，独立于新的 controls 流程。
 
 ## 1. 新建服务器环境

@@ -100,6 +100,10 @@ def require_language_gate(data_dir, run_dir, reviews=None):
         raise ValueError("Complete the 288 language answers before launching format conditions.")
     _, examples = load_controls(data_dir)
     scored, provenance_review = apply_reviews(rows, reviews, {e["cell_id"] for e in examples})
+    if reviews is not None and not provenance_review["review_complete"]:
+        raise ValueError(
+            "Complete all 288 language reviews before using --reviews to launch format conditions."
+        )
     gate = evaluate_family(scored, manifest["config"], "language")
     if not gate["eligible"]:
         raise ValueError(
@@ -114,18 +118,32 @@ def require_language_gate(data_dir, run_dir, reviews=None):
         else "reviewed_provisional"
         if provenance_review["review_complete"]
         else "automatic_provisional",
-        "reviews_sha256": digest(read_jsonl(reviews)) if reviews else None,
+        "reviews_sha256": provenance_review["reviews_sha256"],
         "conditions": gate["conditions"],
     }
 
 
 def launch_controls(data_dir, run_dir, phase, devices, reviews=None):
-    from .controls_analysis import summarize
+    from .controls_analysis import read_reviews, summarize
     from .launch import launch
 
     if phase not in (*POLICIES, "all"):
         raise ValueError("Unknown controls phase.")
+    read_reviews(reviews)  # Fail on a typo before loading either GPU.
     with exclusive_lock(run_dir / "controls-launcher.lock"):
+        # A rerun of --phase all summarizes A before B's worker starts. Recover
+        # B's interrupted tail first, or that intermediate summary cannot read it.
+        manifest, _ = load_controls(data_dir)
+        bind_metadata(run_dir / "experiment.json", context(manifest))
+        for existing_phase in POLICIES:
+            for shard in (0, 1):
+                path = run_dir / existing_phase / f"results-{shard}.jsonl"
+                if path.exists():
+                    with (
+                        exclusive_lock(run_dir / f"gpu-slot-{shard}.lock"),
+                        exclusive_lock(run_dir / existing_phase / f"worker-{shard}.lock"),
+                    ):
+                        recover_jsonl(path)
         for step in ("language", "format") if phase == "all" else (phase,):
             if step == "format":
                 bind_metadata(run_dir / "format-gate.json", require_language_gate(data_dir, run_dir, reviews))

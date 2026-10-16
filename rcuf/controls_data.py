@@ -11,7 +11,7 @@ from pathlib import Path
 from .data import SUSPICIOUS, records_for
 from .io import digest, file_digest, read_json, read_jsonl, write_json, write_jsonl
 
-PROTOCOL = "rcuf-language-controls-v1"
+PROTOCOL = "rcuf-language-controls-v2"
 BACKGROUND = ("none", "en", "fr")
 QUESTIONS = ("en", "fr")
 POLICIES = {"language": ("en", "fr", "none"), "format": ("json", "xml")}
@@ -26,7 +26,9 @@ COMMAND = re.compile(
 def validate_config(config):
     expected = read_json(Path(__file__).resolve().parents[1] / "configs/controls.json")
     if config != expected:
-        raise ValueError("Controls configuration differs from the registered v1 protocol.")
+        raise ValueError(
+            "Controls configuration differs from the registered v2 protocol; prepare fresh v2 data."
+        )
 
 
 def system_prompt(family, policy):
@@ -107,14 +109,75 @@ def parallel_source(config, corpus):
     }
 
 
-def collect_pairs(source, tokenizer, config):
-    """Select whole aligned units in source order; never trim only one language."""
+def language_block_audit(tokenizer, ids, config, expected_language=None):
+    """Audit the entire passage, including a short tail merged into its last block."""
     from .scoring import language_identifier
 
+    width = config["language_audit_chunk_tokens"]
+    starts = list(range(0, len(ids), width))
+    if len(starts) > 1 and len(ids) - starts[-1] < width // 2:
+        starts.pop()
+    audit = []
+    for start, end in zip(starts, starts[1:] + [len(ids)]):
+        label, probability = language_identifier().classify(tokenizer.decode(ids[start:end]))
+        audit.append({"start": start, "end": end, "language": label, "confidence": float(probability)})
+        if expected_language is not None and (
+            label != expected_language or probability < config["language_audit_min_confidence"]
+        ):
+            break  # Rejected candidates need no further classification; accepted audits stay complete.
+    return audit
+
+
+def candidate_pair(window, tokenizer, config, lower, upper):
+    from .scoring import language_identifier
+
+    texts = {lang: "\n\n".join(unit["texts"][lang] for unit in window) for lang in QUESTIONS}
+    full_ids = {lang: tokenizer.encode(text, add_special_tokens=False) for lang, text in texts.items()}
+    actual = {lang: len(ids) for lang, ids in full_ids.items()}
+    if (
+        min(actual.values()) < lower
+        or max(actual.values()) > upper
+        or abs(actual["en"] - actual["fr"]) / max(actual.values()) > config["pair_length_tolerance"]
+    ):
+        return None
+    detection = {lang: language_identifier().classify(text) for lang, text in texts.items()}
+    threshold = config["language_audit_min_confidence"]
+    source_columns = {lang: lang for lang in QUESTIONS}
+    if config["allow_reversed_parallel_columns"] and all(
+        label == {"en": "fr", "fr": "en"}[lang] and probability >= threshold
+        for lang, (label, probability) in detection.items()
+    ):
+        # Correct only whole-pair direction, never mixed-language units inside a passage.
+        source_columns = {"en": "fr", "fr": "en"}
+        texts, full_ids, actual, detection = (
+            {lang: values[column] for lang, column in source_columns.items()}
+            for values in (texts, full_ids, actual, detection)
+        )
+    if any(label != lang or probability < threshold for lang, (label, probability) in detection.items()):
+        return None
+    audits = {}
+    for lang, ids in full_ids.items():
+        audits[lang] = language_block_audit(tokenizer, ids, config, expected_language=lang)
+        if any(block["language"] != lang or block["confidence"] < threshold for block in audits[lang]):
+            return None
+    return {
+        "texts": texts,
+        "tokens": actual,
+        "units": [{"id": u["id"], "sha256": u["sha256"]} for u in window],
+        "language_confidence": {lang: float(p) for lang, (_, p) in detection.items()},
+        "language_blocks": audits,
+        "source_columns": source_columns,
+    }
+
+
+def collect_pairs(source, tokenizer, config):
+    """Select whole aligned units in source order; never trim only one language."""
     lower = math.ceil(config["target_tokens"] * (1 - config["length_tolerance"]))
     upper = math.floor(config["target_tokens"] * (1 + config["length_tolerance"]))
     window, counts, candidates, used = deque(), {"en": 0, "fr": 0}, [], set()
     for index, row in enumerate(source):
+        if index and index % 10000 == 0:
+            print(f"scanned {index} aligned units; {len(candidates)} eligible passages", flush=True)
         pair = {lang: str(row.get("translation", row)[lang]).strip() for lang in QUESTIONS}
         key = digest(pair)
         source_id = str(row.get("id", index))
@@ -143,25 +206,19 @@ def collect_pairs(source, tokenizer, config):
                 counts[lang] -= removed["sizes"][lang]
         if not window or min(counts.values()) < lower:
             continue
-        texts = {lang: "\n\n".join(unit["texts"][lang] for unit in window) for lang in QUESTIONS}
-        actual = {lang: len(tokenizer.encode(text, add_special_tokens=False)) for lang, text in texts.items()}
-        if (
-            min(actual.values()) < lower
-            or max(actual.values()) > upper
-            or abs(actual["en"] - actual["fr"]) / max(actual.values()) > config["pair_length_tolerance"]
-        ):
+        # The longest feasible window need not be the best length-matched one.
+        # Try shorter suffixes by removing whole aligned pairs on BOTH sides.
+        probe, remaining, candidate = deque(window), dict(counts), None
+        while probe and min(remaining.values()) >= lower:
+            candidate = candidate_pair(probe, tokenizer, config, lower, upper)
+            if candidate is not None:
+                break
+            removed = probe.popleft()
+            for lang in QUESTIONS:
+                remaining[lang] -= removed["sizes"][lang]
+        if candidate is None:
             continue
-        detection = {lang: language_identifier().classify(text) for lang, text in texts.items()}
-        if any(label != lang or probability < 0.98 for lang, (label, probability) in detection.items()):
-            continue
-        candidates.append(
-            {
-                "texts": texts,
-                "tokens": actual,
-                "units": [{"id": u["id"], "sha256": u["sha256"]} for u in window],
-                "language_confidence": {lang: float(p) for lang, (_, p) in detection.items()},
-            }
-        )
+        candidates.append(candidate)
         window.clear()
         counts = {"en": 0, "fr": 0}
     if len(candidates) < config["documents"]:
@@ -177,6 +234,13 @@ def prepare(config, output, corpus=None, model=None):
     from transformers import AutoTokenizer
 
     validate_config(config)
+    if corpus is None and config["default_corpus_verified_pairs"] < config["documents"]:
+        raise ValueError(
+            f"Default corpus is blocked: full v2 audit found {config['default_corpus_verified_pairs']} "
+            f"eligible pairs, but the registered design requires {config['documents']}. "
+            "Agree on an expanded/replacement parallel corpus before preparing the formal run; "
+            "do not relax the protocol or reuse v1 inputs."
+        )
     if output.exists() and any(output.iterdir()):
         raise ValueError("Use a fresh controls data directory.")
     engine_config = {
@@ -283,6 +347,28 @@ def load_controls(directory):
         ):
             raise ValueError("Invalid paired background lengths or reused source units.")
         used_units.update(ids)
+        if pair["source_columns"] not in ({"en": "en", "fr": "fr"}, {"en": "fr", "fr": "en"}):
+            raise ValueError("Invalid parallel column orientation.")
+        for lang in QUESTIONS:
+            blocks = pair["language_blocks"][lang]
+            cursor = 0
+            for block in blocks:
+                if (
+                    block["start"] != cursor
+                    or block["end"] <= cursor
+                    or block["language"] != lang
+                    or not manifest["config"]["language_audit_min_confidence"] <= block["confidence"] <= 1
+                ):
+                    raise ValueError("Invalid background language block audit.")
+                cursor = block["end"]
+            if cursor != pair["tokens"][lang]:
+                raise ValueError("Background language audit does not cover the whole passage.")
+            width = manifest["config"]["language_audit_chunk_tokens"]
+            starts = list(range(0, cursor, width))
+            if len(starts) > 1 and cursor - starts[-1] < width // 2:
+                starts.pop()
+            if [(b["start"], b["end"]) for b in blocks] != list(zip(starts, starts[1:] + [cursor])):
+                raise ValueError("Background language audit uses unregistered block sizes.")
     by_document = {p["doc_index"]: p for p in pairs}
     expected = {
         (i, family, policy, background, question)
