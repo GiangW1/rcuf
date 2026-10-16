@@ -1,0 +1,459 @@
+[
+  {
+    "group": 0,
+    "ids": [
+      "R0000",
+      "R0011",
+      "R0027",
+      "R0063",
+      "R0074",
+      "R0130",
+      "R0137",
+      "R0149"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 1,
+    "ids": [
+      "R0001",
+      "R0148"
+    ],
+    "answer": "L'autorisation code pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 2,
+    "ids": [
+      "R0002",
+      "R0125",
+      "R0136",
+      "R0146"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the project details for {PROJECT}.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 3,
+    "ids": [
+      "R0003",
+      "R0022",
+      "R0025",
+      "R0031",
+      "R0051",
+      "R0069",
+      "R0117"
+    ],
+    "answer": "Pour le projet {PROJECT}, le code d'autorisation est {CODE} et le budget approuvé s'élève à {BUDGET} euros. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 4,
+    "ids": [
+      "R0004",
+      "R0017",
+      "R0019",
+      "R0037",
+      "R0043",
+      "R0044",
+      "R0045",
+      "R0058",
+      "R0062",
+      "R0072",
+      "R0075",
+      "R0077",
+      "R0082",
+      "R0086",
+      "R0087",
+      "R0088",
+      "R0102",
+      "R0108",
+      "R0115",
+      "R0118",
+      "R0127",
+      "R0138",
+      "R0139",
+      "R0141",
+      "R0154",
+      "R0155",
+      "R0157",
+      "R0159"
+    ],
+    "answer": "Pour le projet {PROJECT}, le code d'autorisation est {CODE} et le budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 5,
+    "ids": [
+      "R0005",
+      "R0010",
+      "R0012",
+      "R0016",
+      "R0023",
+      "R0029",
+      "R0032",
+      "R0036",
+      "R0038",
+      "R0046",
+      "R0048",
+      "R0050",
+      "R0078",
+      "R0094",
+      "R0096",
+      "R0100",
+      "R0110",
+      "R0114",
+      "R0122",
+      "R0126",
+      "R0131",
+      "R0142"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE}. Le budget approuvé pour ce projet s'élève à {BUDGET} EUR.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 6,
+    "ids": [
+      "R0006",
+      "R0013",
+      "R0039",
+      "R0049",
+      "R0057",
+      "R0067",
+      "R0107",
+      "R0151"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis dans le document de référence.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 7,
+    "ids": [
+      "R0007",
+      "R0035",
+      "R0040",
+      "R0059",
+      "R0061",
+      "R0070",
+      "R0081",
+      "R0084",
+      "R0090",
+      "R0091",
+      "R0106",
+      "R0111",
+      "R0113",
+      "R0147",
+      "R0158"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 8,
+    "ids": [
+      "R0008"
+    ],
+    "answer": "L'autorisation code pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations proviennent directement des enregistrements fournis dans le document de référence.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 9,
+    "ids": [
+      "R0009"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 10,
+    "ids": [
+      "R0014",
+      "R0020",
+      "R0054",
+      "R0128",
+      "R0135",
+      "R0143"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the project entry for {PROJECT}.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 11,
+    "ids": [
+      "R0015"
+    ],
+    "answer": "L'autorisation code pour le projet {PROJECT} est {CODE}. Le budget approuvé pour ce projet est de {BUDGET} EUR.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 12,
+    "ids": [
+      "R0018",
+      "R0080"
+    ],
+    "answer": "Pour le projet {PROJECT}, le code d'autorisation est APR-855 et le budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": false,
+    "reason": "Outputs APR-855 instead of expected authorization code APR-853."
+  },
+  {
+    "group": 13,
+    "ids": [
+      "R0021"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites des enregistrements fournis dans la section \"records\".",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 14,
+    "ids": [
+      "R0024"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 15,
+    "ids": [
+      "R0026"
+    ],
+    "answer": "L'identification code d'autorisation pour le projet {PROJECT} est {CODE}. Le budget approuvé pour ce projet s'élève à {BUDGET} EUR.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 16,
+    "ids": [
+      "R0028",
+      "R0060",
+      "R0099",
+      "R0109"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the fourth record provided in the reference material.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 17,
+    "ids": [
+      "R0030"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} euros. Ces informations sont extraites directement des enregistrements fournis dans le document de référence.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 18,
+    "ids": [
+      "R0033",
+      "R0073",
+      "R0083",
+      "R0121"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the section labeled \"Project: {PROJECT}\".",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 19,
+    "ids": [
+      "R0034"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the section for Project {PROJECT}.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 20,
+    "ids": [
+      "R0041",
+      "R0042",
+      "R0097",
+      "R0103",
+      "R0133"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}. The approved budget for this project is {BUDGET} EUR.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 21,
+    "ids": [
+      "R0047",
+      "R0055",
+      "R0068",
+      "R0104"
+    ],
+    "answer": "Le projet {PROJECT} a un code d'autorisation {CODE} et un budget approuvé de {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis dans le document de référence.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 22,
+    "ids": [
+      "R0052",
+      "R0079",
+      "R0085",
+      "R0093",
+      "R0095",
+      "R0134"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis dans le document de référence.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 23,
+    "ids": [
+      "R0053",
+      "R0120",
+      "R0140",
+      "R0156"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the section listing project details.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 24,
+    "ids": [
+      "R0056",
+      "R0098",
+      "R0101",
+      "R0105",
+      "R0116",
+      "R0124",
+      "R0129",
+      "R0150"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE}. Le budget approuvé pour ce projet s'élève à {BUDGET} EUR.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 25,
+    "ids": [
+      "R0064"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des données fournies dans les enregistrements concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 26,
+    "ids": [
+      "R0065",
+      "R0144"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the section for Project: {PROJECT}.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 27,
+    "ids": [
+      "R0066"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations proviennent directement des enregistrements fournis dans la section des projets.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 28,
+    "ids": [
+      "R0071"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations proviennent directement des enregistrements fournis dans la section \"records\".",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 29,
+    "ids": [
+      "R0076"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations proviennent directement des enregistrements fournis dans la section \"records\".",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 30,
+    "ids": [
+      "R0089",
+      "R0092"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations sont extraites des enregistrements fournis concernant ce projet spécifique.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 31,
+    "ids": [
+      "R0112"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations sont extraites des enregistrements fournis qui lient spécifiquement ce projet à son code et à son montant financier.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 32,
+    "ids": [
+      "R0119"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE}. Le budget approuvé pour ce projet s'élève à {BUDGET} euros.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 33,
+    "ids": [
+      "R0123"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR. This information is found in the provided records under the section detailing the project's financial authorization.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 34,
+    "ids": [
+      "R0132",
+      "R0145"
+    ],
+    "answer": "The authorization code for project {PROJECT} is {CODE}, and its approved budget is {BUDGET} EUR.",
+    "language_ok": false,
+    "content_ok": true
+  },
+  {
+    "group": 35,
+    "ids": [
+      "R0152"
+    ],
+    "answer": "L'autorisation de code pour le projet {PROJECT} est {CODE} et son budget approuvé est de {BUDGET} EUR. Ces informations proviennent directement des enregistrements fournis dans le document de référence.",
+    "language_ok": true,
+    "content_ok": true
+  },
+  {
+    "group": 36,
+    "ids": [
+      "R0153"
+    ],
+    "answer": "Le code d'autorisation pour le projet {PROJECT} est {CODE} et son budget approuvé s'élève à {BUDGET} EUR. Ces informations sont extraites directement des enregistrements fournis dans votre demande.",
+    "language_ok": true,
+    "content_ok": true
+  }
+]

@@ -1,0 +1,318 @@
+{
+  "0": {
+    "repeat_max_logits_error": 0.0,
+    "split_full_max_logits_error": 0.25,
+    "split_full_first_token_matches": true,
+    "split_full_logit_atol": 0.25,
+    "split_full_logit_rtol": 0.02,
+    "split_full_kl": 0.00033886474557220936,
+    "split_full_max_kl": 0.01,
+    "perturbation_max_logits_effect": 17.44921875,
+    "state_shapes": {
+      "0": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "1": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "2": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "4": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "5": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "6": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "8": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "9": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "10": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "12": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "13": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "14": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "16": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "17": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "18": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "20": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "21": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "22": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "24": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "25": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "26": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "28": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "29": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "30": [
+        1,
+        32,
+        128,
+        128
+      ]
+    },
+    "state_layout": "batch,value_head,key_dim,value_dim",
+    "model_forward_signature": "(input_ids: torch.LongTensor | None = None, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_values: transformers.cache_utils.Cache | None = None, inputs_embeds: torch.FloatTensor | None = None, labels: torch.LongTensor | None = None, use_cache: bool | None = None, logits_to_keep: int | torch.Tensor = 0, **kwargs: *<class 'transformers.utils.generic.TransformersKwargs'>) -> transformers.modeling_outputs.CausalLMOutputWithPast"
+  },
+  "1": {
+    "repeat_max_logits_error": 0.0,
+    "split_full_max_logits_error": 0.25,
+    "split_full_first_token_matches": true,
+    "split_full_logit_atol": 0.25,
+    "split_full_logit_rtol": 0.02,
+    "split_full_kl": 0.00033886474557220936,
+    "split_full_max_kl": 0.01,
+    "perturbation_max_logits_effect": 17.44921875,
+    "state_shapes": {
+      "0": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "1": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "2": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "4": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "5": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "6": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "8": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "9": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "10": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "12": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "13": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "14": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "16": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "17": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "18": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "20": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "21": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "22": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "24": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "25": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "26": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "28": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "29": [
+        1,
+        32,
+        128,
+        128
+      ],
+      "30": [
+        1,
+        32,
+        128,
+        128
+      ]
+    },
+    "state_layout": "batch,value_head,key_dim,value_dim",
+    "model_forward_signature": "(input_ids: torch.LongTensor | None = None, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_values: transformers.cache_utils.Cache | None = None, inputs_embeds: torch.FloatTensor | None = None, labels: torch.LongTensor | None = None, use_cache: bool | None = None, logits_to_keep: int | torch.Tensor = 0, **kwargs: *<class 'transformers.utils.generic.TransformersKwargs'>) -> transformers.modeling_outputs.CausalLMOutputWithPast"
+  }
+}

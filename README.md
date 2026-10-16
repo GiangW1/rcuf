@@ -6,7 +6,9 @@
 
 运行环境参考 [GiangW1/Grace](https://github.com/GiangW1/Grace) 的 Python 3.11、BF16、绑卡、tmux 和分阶段检查方式。Grace 公开配置没有固定完整服务器依赖锁，因此这里建立独立环境，并记录实际包版本、模型 revision、数据 revision、源码和运行指纹。
 
-**实现状态：代码包含 CPU 数学和实际小型 HF 模型缓存测试。4B 模型的 A100/FLA 实测需要在服务器上执行。测试通过不代表自然漂移或恢复收益已经成立。**
+**实现状态：已完成 CPU 数学测试、实际小型 HF 模型缓存测试和两卡 RTX 5090/FLA 的 4B 先导运行。实验结果及审阅限制见下方报告。**
+
+**已完成的服务器先导：** [2026-10-16 两张 RTX 5090、Qwen3.5-4B 的 768 条回答及完整审计记录](reports/2026-10-16-rtx5090-pilot/README.md)。本轮采用明确标注的模型语义复核，正式人工盲审待完成。即时投影恢复、低秩相加和文字提醒均为 32/32 联合成功；4096-token 延迟后投影恢复为 11/32、低秩相加为 32/32，未通过预设的持续性门槛。结果包可用附带的标准库脚本离线校验。
 
 ## 1. 新建服务器环境
 
@@ -26,6 +28,8 @@ python scripts/doctor.py
 # 单独检查实际 CUDA/FLA 缓存路径（小型随机模型，不下载 4B 权重）。
 RCUF_GPU_TESTS=1 python -m pytest tests/test_backends.py -k actual_cuda
 ```
+
+RTX 5090/Blackwell 需要支持该架构的 CUDA wheel；上述先导使用同版本 PyTorch 的 `cu128` wheel，即将安装源替换为 `https://download.pytorch.org/whl/cu128`。BF16 缓存续接检查同时限制逐 logit 误差、KL 分布差异和贪心首 token，校准依据见上述报告。
 
 默认固定 `transformers==5.19.0`、`flash-linear-attention==0.5.2`、`torch==2.8.0`。FLA 通过官方 gated-delta-rule 函数接入 HF 的 GDN 计算；attention 使用 PyTorch SDPA，卷积显式使用 HF 的纯 PyTorch 实现。`delta_backend=torch` 显式绑定未装饰的参考函数，CPU 测试也会绑定这条路径，避免已安装的 FLA 或 causal-conv1d 自动接管 CPU 张量。无需 vLLM、verl、flash-attn 或 causal-conv1d 的 CUDA 编译。
 
@@ -218,4 +222,3 @@ rcuf summarize --data-dir data/pilot --run-dir runs/pilot --stage delay \
 阳性结果支持当前模型/语言/文本条件下的恢复可行性。继续研究前需要独立确认集、法语资料对照、第二种策略和方法差异复现。修复成功不证明自然模型只依赖循环状态；阴性不排除其他秩、头或恢复构造。
 
 实现依据：[Qwen3.5 模型/配置](https://huggingface.co/Qwen/Qwen3.5-4B)、[固定 HF 实现](https://github.com/huggingface/transformers/blob/v5.19.0/src/transformers/models/qwen3_5/modeling_qwen3_5.py)、[FLA](https://github.com/fla-org/flash-linear-attention)、[状态引导先例](https://arxiv.org/abs/2404.05971)、[混合模型通道干预](https://arxiv.org/abs/2609.04434)。
-

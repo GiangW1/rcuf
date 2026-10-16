@@ -1,0 +1,248 @@
+{
+  "stage": "delay",
+  "rows": 192,
+  "missing_cells": [],
+  "required_unfinished_reviews": [],
+  "complete": true,
+  "review_complete": true,
+  "metrics": [
+    {
+      "method": "add_lowrank",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 512,
+      "n": 32,
+      "language_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 32,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 4096,
+      "n": 32,
+      "language_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 32,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 32768,
+      "delay": 512,
+      "n": 32,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    },
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 32768,
+      "delay": 4096,
+      "n": 32,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 512,
+      "n": 32,
+      "language_ok": {
+        "successes": 31,
+        "rate": 0.96875
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 31,
+        "rate": 0.96875
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 4096,
+      "n": 32,
+      "language_ok": {
+        "successes": 11,
+        "rate": 0.34375
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 11,
+        "rate": 0.34375
+      }
+    }
+  ],
+  "decision": "stop_current_configuration",
+  "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+  "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+  "results_sha256": "c3db4db51ed2d1b06b8e11dcd0c454ba4c2289255a59bf85ece2e7b043f9626d",
+  "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+  "required_unfinished_compare_reviews": [],
+  "conditions": {
+    "immediate_gain_positive": true,
+    "retains_half_gain": false,
+    "long_content_preserved": true
+  },
+  "immediate_recovery": {
+    "n": 32,
+    "failure_to_success": 32,
+    "success_to_failure": 0,
+    "net_gains": 32,
+    "difference_rate": 1.0,
+    "paired_bootstrap_95ci": [
+      1.0,
+      1.0
+    ]
+  },
+  "delayed": [
+    {
+      "delay": 512,
+      "recovery": {
+        "n": 32,
+        "failure_to_success": 31,
+        "success_to_failure": 0,
+        "net_gains": 31,
+        "difference_rate": 0.96875,
+        "paired_bootstrap_95ci": [
+          0.90625,
+          1.0
+        ]
+      },
+      "content_change": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "baseline_vs_immediate_baseline": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "replacement_vs_lowrank": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 1,
+        "net_gains": -1,
+        "difference_rate": -0.03125,
+        "paired_bootstrap_95ci": [
+          -0.09375,
+          0.0
+        ]
+      }
+    },
+    {
+      "delay": 4096,
+      "recovery": {
+        "n": 32,
+        "failure_to_success": 11,
+        "success_to_failure": 0,
+        "net_gains": 11,
+        "difference_rate": 0.34375,
+        "paired_bootstrap_95ci": [
+          0.1875,
+          0.5
+        ]
+      },
+      "content_change": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "baseline_vs_immediate_baseline": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "replacement_vs_lowrank": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 21,
+        "net_gains": -21,
+        "difference_rate": -0.65625,
+        "paired_bootstrap_95ci": [
+          -0.8125,
+          -0.5
+        ]
+      }
+    }
+  ],
+  "provisional_gate_pass": false,
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+  "review_file": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/delay-model-review.jsonl"
+}

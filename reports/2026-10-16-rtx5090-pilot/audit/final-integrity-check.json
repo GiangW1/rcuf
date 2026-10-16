@@ -1,0 +1,30 @@
+{
+  "baseline": {
+    "rows": 96,
+    "original_unlabeled_exports": 96,
+    "model_review_rows": 96,
+    "results_sha256": "7a208776304ba5b68ffef27f5a465cebbe9f24313b370cc6a617ebf3089794c4",
+    "decision": "continue_pilot"
+  },
+  "tune": {
+    "rows": 160,
+    "original_unlabeled_exports": 160,
+    "model_review_rows": 160,
+    "results_sha256": "745fdb56625a5c1281523dc722365655eb17492780f790a88d11f268adc59b01",
+    "decision": "ready"
+  },
+  "compare": {
+    "rows": 384,
+    "original_unlabeled_exports": 320,
+    "model_review_rows": 320,
+    "results_sha256": "b52be5c15b082267e5b67a535121130bf57e713bb9cb69db77950903ed9954e8",
+    "decision": "continue_pilot"
+  },
+  "delay": {
+    "rows": 192,
+    "original_unlabeled_exports": 192,
+    "model_review_rows": 192,
+    "results_sha256": "c3db4db51ed2d1b06b8e11dcd0c454ba4c2289255a59bf85ece2e7b043f9626d",
+    "decision": "stop_current_configuration"
+  }
+}

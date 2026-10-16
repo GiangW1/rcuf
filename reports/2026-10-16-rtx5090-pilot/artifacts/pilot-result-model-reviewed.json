@@ -1,0 +1,1501 @@
+{
+  "updated_at": "2026-10-16T08:47:02.818815+00:00",
+  "phase": "pilot_complete_model_reviewed",
+  "reason": "All pilot stages complete with model semantic audits; final human blind review remains pending. Delay gate: stop_current_configuration",
+  "stages": {
+    "baseline": {
+      "stage": "baseline",
+      "rows": 96,
+      "missing_cells": [],
+      "required_unfinished_reviews": [],
+      "complete": true,
+      "review_complete": true,
+      "metrics": [
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 8192,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 1,
+            "rate": 0.03125
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 1,
+            "rate": 0.03125
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        }
+      ],
+      "decision": "continue_pilot",
+      "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+      "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+      "results_sha256": "7a208776304ba5b68ffef27f5a465cebbe9f24313b370cc6a617ebf3089794c4",
+      "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+      "conditions": {
+        "short_language_capable": true,
+        "short_content_capable": true,
+        "large_natural_drift": true,
+        "long_content_preserved": true
+      },
+      "drift": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 32,
+        "net_gains": -32,
+        "difference_rate": -1.0,
+        "paired_bootstrap_95ci": [
+          -1.0,
+          -1.0
+        ]
+      },
+      "provisional_gate_pass": true,
+      "reviewer_type": "AI model (Codex)",
+      "human_review_complete": false,
+      "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+      "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+      "review_file": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/baseline-model-review.jsonl"
+    },
+    "tune": {
+      "stage": "tune",
+      "rows": 160,
+      "missing_cells": [],
+      "required_unfinished_reviews": [],
+      "complete": true,
+      "review_complete": true,
+      "metrics": [
+        {
+          "method": "add_full",
+          "strength": 0.25,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_full",
+          "strength": 0.25,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "add_full",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_full",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_full",
+          "strength": 4.0,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 7,
+            "rate": 0.875
+          },
+          "joint_ok": {
+            "successes": 7,
+            "rate": 0.875
+          }
+        },
+        {
+          "method": "add_full",
+          "strength": 4.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 0.25,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 0.25,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 4.0,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 7,
+            "rate": 0.875
+          },
+          "joint_ok": {
+            "successes": 7,
+            "rate": 0.875
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 4.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 0.25,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 0.25,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 0.5,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 0.5,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 7,
+            "rate": 0.875
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 7,
+            "rate": 0.875
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 8,
+          "language_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 8,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 8,
+            "rate": 1.0
+          }
+        }
+      ],
+      "decision": "ready",
+      "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+      "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+      "results_sha256": "745fdb56625a5c1281523dc722365655eb17492780f790a88d11f268adc59b01",
+      "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+      "reviewer_type": "AI model (Codex)",
+      "human_review_complete": false,
+      "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+      "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+      "review_file": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/tune-model-review.jsonl"
+    },
+    "compare": {
+      "stage": "compare",
+      "rows": 384,
+      "missing_cells": [],
+      "required_unfinished_reviews": [],
+      "complete": true,
+      "review_complete": true,
+      "metrics": [
+        {
+          "method": "add_full",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_full",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "reminder",
+          "strength": 0.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "reminder",
+          "strength": 0.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "wrong_anchor",
+          "strength": 1.0,
+          "length": 0,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "wrong_anchor",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 0,
+          "n": 32,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        }
+      ],
+      "decision": "continue_pilot",
+      "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+      "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+      "results_sha256": "b52be5c15b082267e5b67a535121130bf57e713bb9cb69db77950903ed9954e8",
+      "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+      "conditions": {
+        "large_joint_recovery": true,
+        "long_content_preserved": true,
+        "short_joint_preserved": true
+      },
+      "provisional_gate_pass": true,
+      "recovery": {
+        "n": 32,
+        "failure_to_success": 32,
+        "success_to_failure": 0,
+        "net_gains": 32,
+        "difference_rate": 1.0,
+        "paired_bootstrap_95ci": [
+          1.0,
+          1.0
+        ]
+      },
+      "content_change": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "short_change": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "replacement_vs_lowrank": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "replacement_vs_reminder": {
+        "n": 32,
+        "failure_to_success": 0,
+        "success_to_failure": 0,
+        "net_gains": 0,
+        "difference_rate": 0.0,
+        "paired_bootstrap_95ci": [
+          0.0,
+          0.0
+        ]
+      },
+      "french_vs_english_anchor": {
+        "n": 32,
+        "failure_to_success": 32,
+        "success_to_failure": 0,
+        "net_gains": 32,
+        "difference_rate": 1.0,
+        "paired_bootstrap_95ci": [
+          1.0,
+          1.0
+        ]
+      },
+      "reviewer_type": "AI model (Codex)",
+      "human_review_complete": false,
+      "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+      "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+      "review_file": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/compare-model-review.jsonl"
+    },
+    "delay": {
+      "stage": "delay",
+      "rows": 192,
+      "missing_cells": [],
+      "required_unfinished_reviews": [],
+      "complete": true,
+      "review_complete": true,
+      "metrics": [
+        {
+          "method": "add_lowrank",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 512,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "add_lowrank",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 4096,
+          "n": 32,
+          "language_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 32,
+            "rate": 1.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 32768,
+          "delay": 512,
+          "n": 32,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "baseline",
+          "strength": 0.0,
+          "length": 32768,
+          "delay": 4096,
+          "n": 32,
+          "language_ok": {
+            "successes": 0,
+            "rate": 0.0
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 0,
+            "rate": 0.0
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 512,
+          "n": 32,
+          "language_ok": {
+            "successes": 31,
+            "rate": 0.96875
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 31,
+            "rate": 0.96875
+          }
+        },
+        {
+          "method": "replace",
+          "strength": 1.0,
+          "length": 32768,
+          "delay": 4096,
+          "n": 32,
+          "language_ok": {
+            "successes": 11,
+            "rate": 0.34375
+          },
+          "content_ok": {
+            "successes": 32,
+            "rate": 1.0
+          },
+          "joint_ok": {
+            "successes": 11,
+            "rate": 0.34375
+          }
+        }
+      ],
+      "decision": "stop_current_configuration",
+      "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+      "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+      "results_sha256": "c3db4db51ed2d1b06b8e11dcd0c454ba4c2289255a59bf85ece2e7b043f9626d",
+      "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+      "required_unfinished_compare_reviews": [],
+      "conditions": {
+        "immediate_gain_positive": true,
+        "retains_half_gain": false,
+        "long_content_preserved": true
+      },
+      "immediate_recovery": {
+        "n": 32,
+        "failure_to_success": 32,
+        "success_to_failure": 0,
+        "net_gains": 32,
+        "difference_rate": 1.0,
+        "paired_bootstrap_95ci": [
+          1.0,
+          1.0
+        ]
+      },
+      "delayed": [
+        {
+          "delay": 512,
+          "recovery": {
+            "n": 32,
+            "failure_to_success": 31,
+            "success_to_failure": 0,
+            "net_gains": 31,
+            "difference_rate": 0.96875,
+            "paired_bootstrap_95ci": [
+              0.90625,
+              1.0
+            ]
+          },
+          "content_change": {
+            "n": 32,
+            "failure_to_success": 0,
+            "success_to_failure": 0,
+            "net_gains": 0,
+            "difference_rate": 0.0,
+            "paired_bootstrap_95ci": [
+              0.0,
+              0.0
+            ]
+          },
+          "baseline_vs_immediate_baseline": {
+            "n": 32,
+            "failure_to_success": 0,
+            "success_to_failure": 0,
+            "net_gains": 0,
+            "difference_rate": 0.0,
+            "paired_bootstrap_95ci": [
+              0.0,
+              0.0
+            ]
+          },
+          "replacement_vs_lowrank": {
+            "n": 32,
+            "failure_to_success": 0,
+            "success_to_failure": 1,
+            "net_gains": -1,
+            "difference_rate": -0.03125,
+            "paired_bootstrap_95ci": [
+              -0.09375,
+              0.0
+            ]
+          }
+        },
+        {
+          "delay": 4096,
+          "recovery": {
+            "n": 32,
+            "failure_to_success": 11,
+            "success_to_failure": 0,
+            "net_gains": 11,
+            "difference_rate": 0.34375,
+            "paired_bootstrap_95ci": [
+              0.1875,
+              0.5
+            ]
+          },
+          "content_change": {
+            "n": 32,
+            "failure_to_success": 0,
+            "success_to_failure": 0,
+            "net_gains": 0,
+            "difference_rate": 0.0,
+            "paired_bootstrap_95ci": [
+              0.0,
+              0.0
+            ]
+          },
+          "baseline_vs_immediate_baseline": {
+            "n": 32,
+            "failure_to_success": 0,
+            "success_to_failure": 0,
+            "net_gains": 0,
+            "difference_rate": 0.0,
+            "paired_bootstrap_95ci": [
+              0.0,
+              0.0
+            ]
+          },
+          "replacement_vs_lowrank": {
+            "n": 32,
+            "failure_to_success": 0,
+            "success_to_failure": 21,
+            "net_gains": -21,
+            "difference_rate": -0.65625,
+            "paired_bootstrap_95ci": [
+              -0.8125,
+              -0.5
+            ]
+          }
+        }
+      ],
+      "provisional_gate_pass": false,
+      "reviewer_type": "AI model (Codex)",
+      "human_review_complete": false,
+      "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+      "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+      "review_file": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/delay-model-review.jsonl"
+    }
+  },
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+  "selection": {
+    "schema_version": 1,
+    "split": "dev",
+    "strengths": {
+      "add_full": 1.0,
+      "add_lowrank": 1.0,
+      "replace": 1.0
+    },
+    "rank": 4,
+    "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+    "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+    "reviewed_results_sha256": "745fdb56625a5c1281523dc722365655eb17492780f790a88d11f268adc59b01",
+    "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+    "audit": {
+      "add_full": {
+        "candidates": [
+          {
+            "strength": 0.25,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 0,
+                "rate": 0.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 0,
+                "rate": 0.0
+              }
+            },
+            "admissible": true
+          },
+          {
+            "strength": 1.0,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "admissible": true
+          },
+          {
+            "strength": 4.0,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 7,
+                "rate": 0.875
+              },
+              "joint_ok": {
+                "successes": 7,
+                "rate": 0.875
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "admissible": false
+          }
+        ],
+        "selected_admissible": true
+      },
+      "add_lowrank": {
+        "candidates": [
+          {
+            "strength": 0.25,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 0,
+                "rate": 0.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 0,
+                "rate": 0.0
+              }
+            },
+            "admissible": true
+          },
+          {
+            "strength": 1.0,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "admissible": true
+          },
+          {
+            "strength": 4.0,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 7,
+                "rate": 0.875
+              },
+              "joint_ok": {
+                "successes": 7,
+                "rate": 0.875
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "admissible": false
+          }
+        ],
+        "selected_admissible": true
+      },
+      "replace": {
+        "candidates": [
+          {
+            "strength": 0.25,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 0,
+                "rate": 0.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 0,
+                "rate": 0.0
+              }
+            },
+            "admissible": true
+          },
+          {
+            "strength": 0.5,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 7,
+                "rate": 0.875
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 7,
+                "rate": 0.875
+              }
+            },
+            "admissible": true
+          },
+          {
+            "strength": 1.0,
+            "short": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "long": {
+              "n": 8,
+              "language_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "content_ok": {
+                "successes": 8,
+                "rate": 1.0
+              },
+              "joint_ok": {
+                "successes": 8,
+                "rate": 1.0
+              }
+            },
+            "admissible": true
+          }
+        ],
+        "selected_admissible": true
+      }
+    }
+  },
+  "worker_cost_records": {
+    "baseline": [
+      {
+        "complete": true,
+        "invocation_seconds": 145.40596024366096,
+        "prefix_seconds_actual": 56.60363237094134,
+        "prefix_tokens_actual": 663984,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 0,
+        "stage": "baseline"
+      },
+      {
+        "complete": true,
+        "invocation_seconds": 146.33163658017293,
+        "prefix_seconds_actual": 57.73515872610733,
+        "prefix_tokens_actual": 663989,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 1,
+        "stage": "baseline"
+      }
+    ],
+    "tune": [
+      {
+        "complete": true,
+        "invocation_seconds": 251.9298048899509,
+        "prefix_seconds_actual": 12.119279123377055,
+        "prefix_tokens_actual": 132512,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 0,
+        "stage": "tune"
+      },
+      {
+        "complete": true,
+        "invocation_seconds": 254.9073789101094,
+        "prefix_seconds_actual": 12.02852269122377,
+        "prefix_tokens_actual": 132514,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 1,
+        "stage": "tune"
+      }
+    ],
+    "compare": [
+      {
+        "complete": true,
+        "invocation_seconds": 314.5802471139468,
+        "prefix_seconds_actual": 48.30581631464884,
+        "prefix_tokens_actual": 530032,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 0,
+        "stage": "compare"
+      },
+      {
+        "complete": true,
+        "invocation_seconds": 305.3988472414203,
+        "prefix_seconds_actual": 48.12312048114836,
+        "prefix_tokens_actual": 530035,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 1,
+        "stage": "compare"
+      }
+    ],
+    "delay": [
+      {
+        "complete": true,
+        "invocation_seconds": 254.14101717295125,
+        "prefix_seconds_actual": 46.87336561316624,
+        "prefix_tokens_actual": 518976,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 0,
+        "stage": "delay"
+      },
+      {
+        "complete": true,
+        "invocation_seconds": 244.1828081170097,
+        "prefix_seconds_actual": 46.64618842396885,
+        "prefix_tokens_actual": 518977,
+        "resumed_existing_cells": 0,
+        "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+        "shard": 1,
+        "stage": "delay"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "dataset": "wikimedia/wikipedia",
+  "config": "20231101.en",
+  "hf_revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+  "file": "20231101.en/train-00000-of-00041.parquet",
+  "local_path": "/mnt/mydata/wja/rcuf/assets/wikipedia-20231101.en/train-00000-of-00041.parquet",
+  "sha256": "382e7f6f09e488b24793a7f7cfc659879d5a22da2cf2efec6491665f0c019677",
+  "mirror_revision": "5e6791ec3e11c751d4a70699a7ebd865fc6d8af4",
+  "size": 420296449
+}

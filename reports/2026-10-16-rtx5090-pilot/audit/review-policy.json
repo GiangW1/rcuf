@@ -1,0 +1,6 @@
+{
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review."
+}

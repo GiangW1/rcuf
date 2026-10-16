@@ -1,0 +1,28 @@
+{
+  "python": "3.11.17",
+  "platform": "Linux-5.15.0-191-generic-x86_64-with-glibc2.35",
+  "versions": {
+    "torch": "2.8.0+cu128",
+    "transformers": "5.19.0",
+    "flash-linear-attention": "0.5.2",
+    "triton": "3.4.0",
+    "numpy": "1.26.4",
+    "langid": "1.1.6",
+    "datasets": "4.0.0"
+  },
+  "cuda_runtime": "12.8",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "modeling_source_sha256": "aac2a1bcca88829afc6dbdf83f97155ebf64d800ee9d703af3802a9aebcfcd18",
+  "visible_devices": "5",
+  "provenance": {
+    "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+    "git_commit": "9154f98a3770c82fcfd220700cb7365d14281dba"
+  },
+  "weight_loading_audit": {
+    "missing_keys": [],
+    "unexpected_keys": [],
+    "mismatched_keys": [],
+    "error_msgs": []
+  }
+}

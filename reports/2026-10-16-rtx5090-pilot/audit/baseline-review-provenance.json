@@ -1,0 +1,14 @@
+{
+  "stage": "baseline",
+  "reviewed_at": "2026-10-16T08:30:52.837846+00:00",
+  "input": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/baseline-review.jsonl",
+  "output": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/baseline-model-review.jsonl",
+  "reviewed_rows": 96,
+  "french_rows": 33,
+  "content_failures": 0,
+  "reviews_sha256": "f34889cd59daac3cafe4ff49ac75d81027e1999545b07f711951d292ea8bb001",
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review."
+}

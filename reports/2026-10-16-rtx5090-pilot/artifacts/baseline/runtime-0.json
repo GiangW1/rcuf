@@ -1,0 +1,15 @@
+{
+  "versions": {
+    "torch": "2.8.0+cu128",
+    "transformers": "5.19.0",
+    "flash-linear-attention": "0.5.2",
+    "triton": "3.4.0",
+    "numpy": "1.26.4",
+    "langid": "1.1.6",
+    "datasets": "4.0.0"
+  },
+  "modeling_source_sha256": "aac2a1bcca88829afc6dbdf83f97155ebf64d800ee9d703af3802a9aebcfcd18",
+  "model_config_sha256": "ce11630449d53067cd50501e1953ab0d54ed6e8f39ac332d2b61653f9e4f8a3a",
+  "delta_backend": "fla",
+  "attention_backend": "sdpa"
+}

@@ -1,0 +1,12 @@
+{
+  "started_at": "2026-10-16T08:30:58.326441+00:00",
+  "devices": [
+    5,
+    6
+  ],
+  "gpu_status": "0, 13394, 0\n1, 8746, 0\n2, 14129, 0\n3, 14129, 0\n4, 24, 97\n5, 14131, 0\n6, 14131, 0\n7, 10626, 86\n",
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review."
+}
