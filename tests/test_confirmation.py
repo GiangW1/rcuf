@@ -7,7 +7,7 @@ import pytest
 import torch
 from test_hf_continuation import tiny_engine
 
-from rcuf.confirm import assigned_shard, confirmation_cells, generate_branch, specifications
+from rcuf.confirm import assigned_shard, bind_runtime, confirmation_cells, generate_branch, specifications
 from rcuf.confirm_analysis import evaluate, reviewed_results, summarize_confirmation, validated_results
 from rcuf.confirm_data import collect_document, load_confirmation, seal_example, validate_config
 from rcuf.io import digest, file_digest, read_json, write_json, write_jsonl
@@ -170,13 +170,116 @@ def test_confirmation_thresholds_use_same_cut_controls_and_cross_gpu_disagreemen
     for r in rows:
         if r["phase"] == "confirm" and r["method"] == "baseline" and r["delay"] == 4096:
             r["scores"].update(language_ok=True, joint_ok=True)
-    controls = evaluate(rows, config())["controls"]
+    report = evaluate(rows, config())
+    assert report["provisional_decision"] == "not_confirmed"
+    assert not report["conditions"]["delayed_additive_beats_no_op"]
+    assert not report["conditions"]["no_op_cut_stable"]
+    controls = report["controls"]
     assert (
         next(r for r in controls if r["method"] == "add_lowrank" and r["delay"] == 4096)[
             "vs_same_cut_baseline"
         ]["net_gains"]
         == 0
     )
+
+
+def test_confirmation_rejects_immediate_failure_and_content_damage_as_persistence():
+    rows = labeled_fixture_rows()
+    for r in rows:
+        if r["phase"] == "confirm" and r["method"] == "replace":
+            # Replacement was never effective, so there is no loss of persistence.
+            r["scores"].update(language_ok=False, joint_ok=False)
+    report = evaluate(rows, config())
+    assert report["conditions"]["native_method_gap_replicated"]
+    assert not report["conditions"]["both_native_methods_restore_immediately"]
+    assert not report["conditions"]["replacement_degrades_with_delay"]
+    assert report["provisional_decision"] == "not_confirmed"
+
+    rows = labeled_fixture_rows()
+    for r in rows:
+        if r["phase"] == "confirm" and r["method"] == "replace" and r["delay"] == 4096:
+            # Same joint scores as the pilot fixture, but failures are factual, not linguistic.
+            r["scores"].update(language_ok=True, content_ok=r["doc_index"] < 11)
+    report = evaluate(rows, config())
+    assert report["conditions"]["native_method_gap_replicated"]
+    assert not report["conditions"]["native_language_gap_replicated"]
+    assert not report["conditions"]["native_methods_content_preserved"]
+    assert report["provisional_decision"] == "not_confirmed"
+
+
+@pytest.mark.parametrize("failure", ["no_recovery", "content_damage"])
+def test_replay_requires_recovery_and_language_gap_not_just_joint_gap(failure):
+    rows = labeled_fixture_rows()
+    for r in rows:
+        if not r["phase"].startswith("crossover-"):
+            continue
+        if failure == "no_recovery" and r["method"] == "baseline":
+            r["scores"].update(language_ok=True, joint_ok=True)
+        if failure == "content_damage" and r["method"] == "replace":
+            r["scores"].update(language_ok=True, content_ok=r["doc_index"] < 11)
+    report = evaluate(rows, config())
+    assert report["conditions"]["replay_method_gap_replicated"]
+    assert not report["conditions"]["replay_recovery_and_language_gap"]
+    assert report["provisional_decision"] == "not_confirmed"
+
+
+def test_equal_norm_support_requires_language_gap_and_content_preservation():
+    rows = labeled_fixture_rows()
+    for r in rows:
+        if r["phase"] == "confirm" and r["method"] == "replace_norm_matched" and r["delay"] == 4096:
+            r["scores"].update(content_ok=False, joint_ok=False)
+    report = evaluate(rows, config())
+    assert report["provisional_decision"] == "confirmed"
+    assert report["equal_norm_additive_minus_replace_4096"]["net_gains"] == 32
+    assert not report["equal_norm_gap_supported"]
+    for r in rows:
+        if r["method"] == "replace_norm_matched" and r["delay"] == 4096:
+            r["scores"].update(content_ok=True, language_ok=False)
+    assert evaluate(rows, config())["equal_norm_gap_supported"]
+
+
+def test_cross_gpu_stability_does_not_hide_language_changes_behind_failed_content():
+    rows = labeled_fixture_rows()
+    for r in rows:
+        if r["phase"].startswith("crossover-") and r["method"] == "baseline" and r["doc_index"] < 2:
+            r["scores"].update(content_ok=False, joint_ok=False, language_ok=r["phase"] == "crossover-b")
+    report = evaluate(rows, config())
+    assert report["conditions"]["cross_gpu_joint_stable"]
+    assert not report["conditions"]["cross_gpu_language_content_stable"]
+    assert report["provisional_decision"] == "not_confirmed"
+
+
+def test_runtime_is_bound_across_workers_before_generation(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+
+    barrier = Barrier(2)
+
+    def bind():
+        barrier.wait(timeout=5)
+        bind_runtime(tmp_path, {"model": "same"})
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        futures = [pool.submit(bind) for _ in range(2)]
+        for future in futures:
+            future.result(timeout=5)
+    with pytest.raises(ValueError, match="metadata differs"):
+        bind_runtime(tmp_path, {"model": "different"})
+    assert read_json(tmp_path / "runtime.json") == {"model": "same"}
+
+
+def test_large_file_digest_does_not_read_the_whole_file(tmp_path, monkeypatch):
+    import hashlib
+
+    payload = b"corpus" * 500000
+    path = tmp_path / "corpus.jsonl"
+    path.write_bytes(payload)
+
+    def forbid_read_bytes(self):
+        raise AssertionError("Whole-file allocation")
+
+    monkeypatch.setattr(Path, "read_bytes", forbid_read_bytes)
+    assert file_digest(path) == hashlib.sha256(payload).hexdigest()
 
 
 def test_model_reviews_cannot_become_final_human_confirmation(tmp_path, monkeypatch):
@@ -215,7 +318,7 @@ def test_confirmation_manifest_rejects_modified_tokens_and_mispaired_targets(tmp
     rows = [seal_example(r) for r in examples()]
     manifest = {
         "config": config(),
-        "protocol": "rcuf-confirmation-v1",
+        "protocol": "rcuf-confirmation-v2",
         "pilot_manifest_sha256": config()["pilot_manifest_sha256"],
     }
 
@@ -273,7 +376,7 @@ def test_corpus_filter_excludes_pilot_duplicates_commands_wrong_language_and_spe
 
 def test_result_validation_rejects_wrong_reminder_tokens_and_gpu_swaps(tmp_path, monkeypatch):
     import rcuf.confirm_analysis as module
-    from rcuf.confirm import context
+    from rcuf.confirm import context, validate_resumed
 
     data = [seal_example(dict(e, question_cut=4100, input_ids=[3] * 4110)) for e in examples()]
     manifest = {"config": config(), "manifest_sha256": "fixture"}
@@ -288,6 +391,8 @@ def test_result_validation_rejects_wrong_reminder_tokens_and_gpu_swaps(tmp_path,
             shard = assigned_shard(example, phase)
             directory = tmp_path / phase
             runtime = {"fixture": "runtime"}
+            write_json(tmp_path / "runtime.json", runtime)
+            write_json(tmp_path / f"device-slot-{shard}.json", {"gpu_uuid": f"GPU-{shard}"})
             write_json(directory / f"runtime-{shard}.json", runtime)
             write_json(directory / f"device-{shard}.json", {"gpu_uuid": f"GPU-{shard}"})
             cut = example["question_cut"] - spec["delay"]
@@ -312,8 +417,15 @@ def test_result_validation_rejects_wrong_reminder_tokens_and_gpu_swaps(tmp_path,
         write_jsonl(path, rows)
     assert len(validated_results(None, tmp_path)[1]) == 768
     path = tmp_path / "confirm/results-0.jsonl"
+    selected = {
+        k: v for k, v in confirmation_cells(data, "confirm").items() if assigned_shard(v[0], "confirm") == 0
+    }
+    assert validate_resumed(results[path], selected, manifest, path.parent, "confirm", 0) == selected.keys()
     reminder = next(r for r in results[path] if r["method"] == "reminder")
     reminder["inserted_ids"] = []
+    # A complete-looking shard must be validated before the "already complete" shortcut.
+    with pytest.raises(ValueError, match="token stream"):
+        validate_resumed(results[path], selected, manifest, path.parent, "confirm", 0)
     write_jsonl(path, results[path])
     with pytest.raises(ValueError, match="token stream"):
         validated_results(None, tmp_path)

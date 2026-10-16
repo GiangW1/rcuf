@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "protocol": "rcuf-confirmation-v1",
+  "protocol": "rcuf-confirmation-v2",
   "pilot_manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
   "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
   "dataset": "wikimedia/wikipedia",
@@ -14,11 +14,15 @@
   "strength": 1.0,
   "bootstrap_samples": 10000,
   "gates": {
-    "crossover_max_joint_disagreements_per_method": 1,
+    "crossover_max_disagreements_per_metric": 1,
+    "same_cut_baseline_max_disagreements_per_metric": 1,
     "short_min_successes": 31,
     "drift_min_net_losses": 7,
     "long_min_content_successes": 29,
     "additive_min_successes": 29,
+    "immediate_min_successes": 29,
+    "recovery_min_net_gains": 7,
+    "replacement_delay_min_net_losses": 7,
     "method_gap_min_net_gains": 7,
     "max_content_net_losses": 1
   }

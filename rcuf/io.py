@@ -16,7 +16,9 @@ def digest(value: Any) -> str:
 
 
 def file_digest(path: str | Path) -> str:
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    # Local Wikipedia exports can be many GB: do not load the entire file into RAM.
+    with Path(path).open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 def read_json(path: str | Path) -> Any:

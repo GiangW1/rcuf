@@ -7,7 +7,7 @@ import re
 from .data import SUSPICIOUS, load_data, records_for, render_prompt, system_tokens
 from .io import append_jsonl, digest, file_digest, read_json, write_json
 
-PROTOCOL = "rcuf-confirmation-v1"
+PROTOCOL = "rcuf-confirmation-v2"
 PILOT_HASH = "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919"
 MODEL_REVISION = "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"
 FRENCH_INSTRUCTION = re.compile(
@@ -34,17 +34,23 @@ def validate_config(config):
         "backgrounds": {"en": "20231101.en", "fr": "20231101.fr"},
         "bootstrap_samples": 10000,
         "gates": {
-            "crossover_max_joint_disagreements_per_method": 1,
+            "crossover_max_disagreements_per_metric": 1,
+            "same_cut_baseline_max_disagreements_per_metric": 1,
             "short_min_successes": 31,
             "drift_min_net_losses": 7,
             "long_min_content_successes": 29,
             "additive_min_successes": 29,
+            "immediate_min_successes": 29,
+            "recovery_min_net_gains": 7,
+            "replacement_delay_min_net_losses": 7,
             "method_gap_min_net_gains": 7,
             "max_content_net_losses": 1,
         },
     }
     if any(config.get(k) != v for k, v in fixed.items()):
-        raise ValueError("Confirmation protocol differs from the registered v1 configuration.")
+        raise ValueError(
+            "Confirmation protocol differs from the registered v2 configuration; prepare fresh data."
+        )
     if set(config["backgrounds"]) != {"en", "fr"}:
         raise ValueError("Both English and French background sources are required.")
     if config["bootstrap_samples"] < 100:

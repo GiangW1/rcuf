@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import os
 import time
 from pathlib import Path
@@ -87,6 +88,62 @@ def runtime_signature(engine, env):
     }
 
 
+def bind_runtime(run_dir, runtime):
+    # Compare across workers and phases before generating, not only at final analysis.
+    # The short lease makes the first-writer check atomic even for concurrent workers.
+    with (run_dir / "runtime.lock").open("a") as lock:
+        # This brief metadata critical section waits, unlike worker ownership leases.
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        bind_metadata(run_dir / "runtime.json", runtime)
+
+
+def validate_result(row, example, spec, manifest, phase, shard, runtime, device):
+    """The same checks apply to resumed rows and to the final report."""
+    if (
+        row["phase"] != phase
+        or row["shard"] != shard
+        or any(row[k] != v for k, v in spec.items())
+        or any(
+            row[k] != example[k]
+            for k in ("doc_id", "doc_index", "cohort", "background", "length", "target", "input_sha256")
+        )
+        or row["manifest_sha256"] != manifest["manifest_sha256"]
+        or row["output_sha256"] != digest(row["text"])
+    ):
+        raise ValueError("Result differs from its registered input/spec/output.")
+    cut = example["question_cut"] - spec["delay"]
+    extra = example["reminder_ids"] if spec["method"] == "reminder" else []
+    if (
+        cut <= 0
+        or row["intervention_cut"] != cut
+        or row["inserted_ids"] != extra
+        or row["prompt_tokens_actual"] != len(example["input_ids"]) + len(extra)
+        or row["actual_input_sha256"]
+        != digest(example["input_ids"][:cut] + extra + example["input_ids"][cut:])
+        or row["prefix_schedule"] != {"start": 0, "end": cut, "chunk_size": 2048}
+    ):
+        raise ValueError("Actual token stream or prefill schedule differs from the plan.")
+    if row["runtime_sha256"] != digest(runtime) or row["gpu_uuid"] != device["gpu_uuid"]:
+        raise ValueError("Result/runtime/device fingerprint mismatch.")
+
+
+def validate_resumed(previous, selected, manifest, directory, phase, shard):
+    seen = {r["cell_id"] for r in previous}
+    if len(seen) != len(previous) or not seen.issubset(selected):
+        raise ValueError("Unexpected or duplicate resumed confirmation output.")
+    if previous:
+        runtime = read_json(directory / f"runtime-{shard}.json")
+        if read_json(directory.parent / "runtime.json") != runtime:
+            raise ValueError("Resumed worker differs from the experiment runtime.")
+        device = read_json(directory / f"device-{shard}.json")
+        if read_json(directory.parent / f"device-slot-{shard}.json")["gpu_uuid"] != device["gpu_uuid"]:
+            raise ValueError("Resumed worker differs from its physical GPU slot.")
+        for row in previous:
+            example, spec = selected[row["cell_id"]]
+            validate_result(row, example, spec, manifest, phase, shard, runtime, device)
+    return seen
+
+
 def launch_confirmation(data_dir, run_dir, phase, devices):
     from .launch import launch
 
@@ -152,9 +209,7 @@ def _worker(data_dir, run_dir, phase, shard):
         },
     )
     previous = recover_jsonl(directory / f"results-{shard}.jsonl")
-    seen = {r["cell_id"] for r in previous}
-    if len(seen) != len(previous) or not seen.issubset(selected):
-        raise ValueError("Unexpected or duplicate resumed confirmation output.")
+    seen = validate_resumed(previous, selected, manifest, directory, phase, shard)
     if seen == selected.keys():
         print(f"{phase} shard={shard}: already complete", flush=True)
         return
@@ -163,6 +218,7 @@ def _worker(data_dir, run_dir, phase, shard):
         raise RuntimeError("Server confirmation requires CUDA; run CPU unit tests locally.")
     env = environment()
     runtime = runtime_signature(engine, env)
+    bind_runtime(run_dir, runtime)
     bind_metadata(directory / f"runtime-{shard}.json", runtime)
     # UUID detects accidentally launching both device aliases on one physical GPU.
     properties = torch.cuda.get_device_properties(0)

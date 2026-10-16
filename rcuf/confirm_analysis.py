@@ -6,7 +6,7 @@ import random
 from collections import defaultdict
 
 from .analysis import metrics, paired
-from .confirm import assigned_shard, confirmation_cells, context
+from .confirm import assigned_shard, confirmation_cells, context, validate_result
 from .confirm_data import load_confirmation
 from .io import digest, read_json, read_jsonl, write_json, write_jsonl
 
@@ -29,43 +29,14 @@ def validated_results(data_dir, run_dir):
                 seen.add(cell)
                 example, spec = expected[cell]
                 shard = assigned_shard(example, phase)
-                if (
-                    row["phase"] != phase
-                    or row["shard"] != shard
-                    or path.name != f"results-{shard}.jsonl"
-                    or any(row[k] != v for k, v in spec.items())
-                    or any(
-                        row[k] != example[k]
-                        for k in (
-                            "doc_id",
-                            "doc_index",
-                            "cohort",
-                            "background",
-                            "length",
-                            "target",
-                            "input_sha256",
-                        )
-                    )
-                    or row["manifest_sha256"] != manifest["manifest_sha256"]
-                    or row["output_sha256"] != digest(row["text"])
-                ):
-                    raise ValueError("Result differs from its registered input/spec/output.")
-                cut = example["question_cut"] - spec["delay"]
-                extra = example["reminder_ids"] if spec["method"] == "reminder" else []
-                if (
-                    row["intervention_cut"] != cut
-                    or row["inserted_ids"] != extra
-                    or row["prompt_tokens_actual"] != len(example["input_ids"]) + len(extra)
-                    or row["actual_input_sha256"]
-                    != digest(example["input_ids"][:cut] + extra + example["input_ids"][cut:])
-                    or row["prefix_schedule"] != {"start": 0, "end": cut, "chunk_size": 2048}
-                ):
-                    raise ValueError("Actual token stream or prefill schedule differs from the plan.")
+                if path.name != f"results-{shard}.jsonl":
+                    raise ValueError("Result is in the wrong shard file.")
                 directory = run_dir / phase
                 runtime = read_json(directory / f"runtime-{shard}.json")
                 device = read_json(directory / f"device-{shard}.json")
-                if row["runtime_sha256"] != digest(runtime) or row["gpu_uuid"] != device["gpu_uuid"]:
-                    raise ValueError("Result/runtime/device fingerprint mismatch.")
+                if read_json(run_dir / "runtime.json") != runtime:
+                    raise ValueError("Worker differs from the experiment runtime.")
+                validate_result(row, example, spec, manifest, phase, shard, runtime, device)
                 rows.append(row)
         missing[phase] = sorted(expected.keys() - seen)
     if len({r["runtime_sha256"] for r in rows}) > 1:
@@ -183,6 +154,18 @@ def evaluate(rows, config):
     def comparison(left, right, metric="joint_ok"):
         return paired(left, right, metric, bootstrap)
 
+    def disagreements(left, right, metric):
+        effect = comparison(left, right, metric)
+        return effect["failure_to_success"] + effect["success_to_failure"]
+
+    def content_preserved(method, delay, phase="confirm"):
+        values = fresh(method=method, delay=delay, phase=phase)
+        return (
+            metrics(values)["content_ok"]["successes"] >= gates["long_min_content_successes"]
+            and comparison(values, fresh(delay=delay, phase=phase), "content_ok")["net_gains"]
+            >= -gates["max_content_net_losses"]
+        )
+
     fresh = lambda **kw: select_rows(rows, **kw)
     short = fresh(background="common", length=0)
     long = fresh()
@@ -205,6 +188,9 @@ def evaluate(rows, config):
                 "language_disagreements": sum(
                     a_by[d]["scores"]["language_ok"] != b_by[d]["scores"]["language_ok"] for d in a_by
                 ),
+                "content_disagreements": sum(
+                    a_by[d]["scores"]["content_ok"] != b_by[d]["scores"]["content_ok"] for d in a_by
+                ),
                 "token_output_disagreements": sum(
                     a_by[d]["generated_ids"] != b_by[d]["generated_ids"] for d in a_by
                 ),
@@ -214,6 +200,12 @@ def evaluate(rows, config):
     matched_gap = comparison(
         fresh(method="add_lowrank", delay=4096), fresh(method="replace_norm_matched", delay=4096)
     )
+    delayed_recovery = comparison(fresh(method="add_lowrank", delay=4096), fresh(delay=4096))
+    replacement_delay_effect = comparison(fresh(method="replace", delay=4096), fresh(method="replace"))
+    baseline_disagreements = {
+        metric: disagreements(fresh(delay=4096), long, metric)
+        for metric in ("language_ok", "content_ok", "joint_ok")
+    }
     replay_gaps = [
         {
             "phase": phase,
@@ -221,16 +213,42 @@ def evaluate(rows, config):
                 select_rows(rows, phase=phase, method="add_lowrank", delay=4096),
                 select_rows(rows, phase=phase, method="replace", delay=4096),
             ),
+            "language_gap": comparison(
+                fresh(phase=phase, method="add_lowrank", delay=4096),
+                fresh(phase=phase, method="replace", delay=4096),
+                "language_ok",
+            ),
+            "additive_minus_no_op": comparison(
+                fresh(phase=phase, method="add_lowrank", delay=4096), fresh(phase=phase, delay=4096)
+            ),
         }
         for phase in ("crossover-a", "crossover-b")
     ]
     conditions = {
         "cross_gpu_joint_stable": all(
-            x["joint_disagreements"] <= gates["crossover_max_joint_disagreements_per_method"]
+            x["joint_disagreements"] <= gates["crossover_max_disagreements_per_metric"] for x in crossover
+        ),
+        "cross_gpu_language_content_stable": all(
+            x[f"{metric}_disagreements"] <= gates["crossover_max_disagreements_per_metric"]
             for x in crossover
+            for metric in ("language", "content")
+        ),
+        "no_op_cut_stable": all(
+            n <= gates["same_cut_baseline_max_disagreements_per_metric"]
+            for n in baseline_disagreements.values()
         ),
         "replay_method_gap_replicated": all(
             x["additive_minus_replace"]["net_gains"] >= gates["method_gap_min_net_gains"] for x in replay_gaps
+        ),
+        "replay_recovery_and_language_gap": all(
+            x["language_gap"]["net_gains"] >= gates["method_gap_min_net_gains"]
+            and x["additive_minus_no_op"]["net_gains"] >= gates["recovery_min_net_gains"]
+            for x in replay_gaps
+        ),
+        "replay_content_preserved": all(
+            content_preserved(method, 4096, phase)
+            for phase in ("crossover-a", "crossover-b")
+            for method in ("add_lowrank", "replace")
         ),
         "short_language_capable": metrics(short)["language_ok"]["successes"] >= gates["short_min_successes"],
         "short_content_capable": metrics(short)["content_ok"]["successes"] >= gates["short_min_successes"],
@@ -242,11 +260,22 @@ def evaluate(rows, config):
             "successes"
         ]
         >= gates["additive_min_successes"],
+        "delayed_additive_beats_no_op": delayed_recovery["net_gains"] >= gates["recovery_min_net_gains"],
+        "both_native_methods_restore_immediately": all(
+            metrics(fresh(method=method))["joint_ok"]["successes"] >= gates["immediate_min_successes"]
+            and comparison(fresh(method=method), long)["net_gains"] >= gates["recovery_min_net_gains"]
+            for method in ("add_lowrank", "replace")
+        ),
+        "replacement_degrades_with_delay": -replacement_delay_effect["net_gains"]
+        >= gates["replacement_delay_min_net_losses"],
         "native_method_gap_replicated": native_gap["net_gains"] >= gates["method_gap_min_net_gains"],
-        "additive_content_preserved": comparison(
-            fresh(method="add_lowrank", delay=4096), fresh(delay=4096), "content_ok"
+        "native_language_gap_replicated": comparison(
+            fresh(method="add_lowrank", delay=4096), fresh(method="replace", delay=4096), "language_ok"
         )["net_gains"]
-        >= -gates["max_content_net_losses"],
+        >= gates["method_gap_min_net_gains"],
+        "native_methods_content_preserved": all(
+            content_preserved(method, delay) for method in ("add_lowrank", "replace") for delay in (0, 4096)
+        ),
     }
     controls = []
     for delay in (0, 4096):
@@ -286,7 +315,19 @@ def evaluate(rows, config):
         "replay_method_gaps": replay_gaps,
         "native_additive_minus_replace_4096": native_gap,
         "equal_norm_additive_minus_replace_4096": matched_gap,
-        "equal_norm_gap_supported": matched_gap["net_gains"] >= gates["method_gap_min_net_gains"],
+        "equal_norm_gap_supported": (
+            all(conditions.values())
+            and matched_gap["net_gains"] >= gates["method_gap_min_net_gains"]
+            and comparison(
+                fresh(method="add_lowrank", delay=4096),
+                fresh(method="replace_norm_matched", delay=4096),
+                "language_ok",
+            )["net_gains"]
+            >= gates["method_gap_min_net_gains"]
+            and content_preserved("replace_norm_matched", 4096)
+        ),
+        "delayed_additive_minus_no_op": delayed_recovery,
+        "replacement_4096_minus_0": replacement_delay_effect,
         "controls": controls,
         "onset": onset,
         "french_minus_english_32k_language": comparison(fresh(background="fr"), long, "language_ok"),
@@ -294,6 +335,7 @@ def evaluate(rows, config):
             fresh(method="reminder", delay=4096), fresh(method="add_lowrank", delay=4096)
         ),
         "same_cut_baseline_4096_minus_0": comparison(fresh(delay=4096), long),
+        "same_cut_baseline_disagreements": baseline_disagreements,
     }
 
 
@@ -328,6 +370,10 @@ def summarize_confirmation(data_dir, run_dir, reviews=None):
             ),
             "Norm matching is per layer, uses each unedited state, and is not an idempotent replacement.",
             "Every delay has its own independent prefill from token zero and its own no-op baseline.",
+            (
+                "Delay comparisons edit different input positions and states, not the same restored state at "
+                "two later readouts; they establish position-conditioned robustness, not a forgetting rate."
+            ),
             "Bootstrap intervals condition on 32 documents; 32/32 is not a population guarantee.",
             "State editing demonstrates behavioral control, not exclusive natural storage in recurrence.",
         ],
