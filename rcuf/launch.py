@@ -15,11 +15,26 @@ from .processes import defer_termination, exclusive_lock, termination_signals
 from .runner import load_selection, require_previous_gate
 
 
-def launch(data_dir: Path, run_dir: Path, stage: str, devices: str, *, confirmation=False) -> None:
+def launch(
+    data_dir: Path,
+    run_dir: Path,
+    stage: str,
+    devices: str,
+    *,
+    confirmation=False,
+    controls=False,
+    reviews=None,
+) -> None:
     selected_devices = [device.strip() for device in devices.split(",")]
     if any(not device for device in selected_devices) or len(set(selected_devices)) != len(selected_devices):
         raise ValueError("Specify distinct GPU IDs, e.g. --devices 0,1.")
-    if confirmation:
+    if controls:
+        from .controls_data import load_controls
+
+        if len(selected_devices) != 2:
+            raise ValueError("Controls requires exactly two GPU slots.")
+        manifest, _ = load_controls(data_dir)
+    elif confirmation:
         from .confirm_data import load_confirmation
 
         if len(selected_devices) != 2:
@@ -36,7 +51,9 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str, *, confirmat
             "source_sha256": provenance()["source_sha256"],
         },
     )
-    if confirmation:
+    if controls:
+        bind_metadata(run_dir / "controls-devices.json", {"ordered_devices": selected_devices})
+    elif confirmation:
         # Device order stays fixed: crossover-b reverses the document assignment.
         bind_metadata(run_dir / "confirmation-devices.json", {"ordered_devices": selected_devices})
     elif stage in {"compare", "delay"}:
@@ -60,17 +77,19 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str, *, confirmat
                     sys.executable,
                     "-m",
                     "rcuf.cli",
-                    "confirm-worker" if confirmation else "worker",
+                    "controls-worker" if controls else "confirm-worker" if confirmation else "worker",
                     "--data-dir",
                     str(data_dir),
                     "--run-dir",
                     str(run_dir),
-                    "--phase" if confirmation else "--stage",
+                    "--phase" if confirmation or controls else "--stage",
                     stage,
                     "--shard",
                     str(shard),
                 ]
-                if not confirmation:
+                if controls and reviews is not None:
+                    command.extend(["--reviews", str(reviews)])
+                if not confirmation and not controls:
                     command.extend(["--shards", str(len(selected_devices))])
                 with defer_termination():
                     process = subprocess.Popen(
@@ -96,7 +115,13 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str, *, confirmat
                 time.sleep(1)
             if any(process.returncode for process in processes):
                 raise RuntimeError("A worker failed. Read worker-*.log.")
-            summarize = "confirm-summarize" if confirmation else f"summarize --stage {stage}"
+            summarize = (
+                "controls-summarize"
+                if controls
+                else "confirm-summarize"
+                if confirmation
+                else f"summarize --stage {stage}"
+            )
             print(
                 f"{stage} complete. Run rcuf {summarize} --data-dir {data_dir} --run-dir {run_dir}",
                 flush=True,

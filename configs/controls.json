@@ -1,0 +1,33 @@
+{
+  "protocol": "rcuf-language-controls-v2",
+  "documents": 16,
+  "record_seed": 26101717,
+  "corpus_seed": 26101718,
+  "target_tokens": 8192,
+  "length_tolerance": 0.05,
+  "pair_length_tolerance": 0.05,
+  "language_audit_chunk_tokens": 256,
+  "language_audit_min_confidence": 0.98,
+  "allow_reversed_parallel_columns": true,
+  "dataset": "sentence-transformers/parallel-sentences-opensubtitles",
+  "dataset_revision": "d86a387587ab6f2fd9ec7453b2765cec68111c87",
+  "dataset_file": "en-fr/train-00000-of-00002.parquet",
+  "dataset_sha256": "9c1fc17a1d82ff60e0a243679c92c86967cd73eacaef6d8469915f42e0fef921",
+  "dataset_columns": {"en": "english", "fr": "non_english"},
+  "model": "Qwen/Qwen3.5-4B",
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "seed": 1729,
+  "max_new_tokens": 128,
+  "prefill_chunk_size": 2048,
+  "attention_backend": "sdpa",
+  "delta_backend": "fla",
+  "snapshot_device": "cpu",
+  "bootstrap_samples": 10000,
+  "gates": {
+    "max_truncated_answers": 0,
+    "short_min_successes": 15,
+    "content_min_successes": 15,
+    "min_control_loss": 0.25,
+    "min_affected_documents": 4
+  }
+}
