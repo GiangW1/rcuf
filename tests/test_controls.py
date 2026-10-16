@@ -673,7 +673,13 @@ def test_registered_parallel_file_hash_checked_before_reading(tmp_path, monkeypa
 
 
 def test_cpu_audit_rejects_tokenizer_or_source_drift(tmp_path, monkeypatch):
-    import scripts.audit_controls_data as module
+    import importlib.util
+
+    # Console-script pytest need not add the repository root to sys.path.
+    script = Path(__file__).resolve().parents[1] / "scripts/audit_controls_data.py"
+    spec = importlib.util.spec_from_file_location("audit_controls_data", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
     manifest, _ = sealed_data(tmp_path)
     manifest.update(
