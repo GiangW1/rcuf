@@ -2,7 +2,7 @@
 
 本仓库实现一个无需训练的分阶段先导实验：**自然语言策略是否漂移 → 循环状态恢复是否保住内容 → 一次恢复能维持多远**。默认模型是 `Qwen/Qwen3.5-4B`。`Qwen3-4B` 是纯 Transformer，不能运行这里的 GDN 状态干预。
 
-两张 A100 80GB 各加载一份模型，按**文档**分工；同一文档的全部方法在同一 GPU 上从独立缓存副本开始。没有 tensor parallel 或 DDP。单卡可使用 `--devices 0`。
+两张 A100 80GB 各加载一份模型，按**文档**分工；同一文档的全部方法在同一 GPU 上从独立缓存副本开始。没有 tensor parallel 或 DDP。最初的 pilot 支持单卡 `--devices 0`；后续 confirmation / controls 固定要求两卡。
 
 运行环境参考 [GiangW1/Grace](https://github.com/GiangW1/Grace) 的 Python 3.11、BF16、绑卡、tmux 和分阶段检查方式。Grace 公开配置没有固定完整服务器依赖锁，因此这里建立独立环境，并记录实际包版本、模型 revision、数据 revision、源码和运行指纹。
 
@@ -10,7 +10,9 @@
 
 **已完成的服务器先导：** [2026-10-16 两张 RTX 5090、Qwen3.5-4B 的 768 条回答及完整审计记录](reports/2026-10-16-rtx5090-pilot/README.md)。本轮采用明确标注的模型语义复核，正式人工盲审待完成。即时投影恢复、低秩相加和文字提醒均为 32/32 联合成功；4096-token 延迟后投影恢复为 11/32、低秩相加为 32/32，未通过预设的持续性门槛。结果包可用附带的标准库脚本离线校验。
 
-**下一轮最小确认：** [两卡交叉复跑、独立英/法资料与等幅度干预](docs/confirmation.md)。固定上一轮参数，768 条正式回答 + 6 条 smoke；使用 `confirm-prepare` / `confirm-launch` / `confirm-summarize`，运行步骤和预设判断见文档。
+**当前下一轮：** [先排除语言倾向，再检验 JSON/XML 规则的两关生死实验](docs/language-controls.md)。16 组新英法对齐材料，语言关 288 条、过关后格式关 192 条；使用 `controls-prepare` / `controls-launch` / `controls-summarize`。固定两张卡、阶段门槛与人工复核，不进行状态干预。
+
+**上一轮最小确认：** [两卡交叉复跑、独立英/法资料与等幅度干预](docs/confirmation.md)。固定先导参数，768 条正式回答 + 6 条 smoke；使用 `confirm-*` 命令，独立于新的 controls 流程。
 
 ## 1. 新建服务器环境
 

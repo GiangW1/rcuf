@@ -1,0 +1,27 @@
+{
+  "protocol": "rcuf-language-controls-v1",
+  "documents": 16,
+  "record_seed": 26101717,
+  "corpus_seed": 26101718,
+  "target_tokens": 8192,
+  "length_tolerance": 0.05,
+  "pair_length_tolerance": 0.05,
+  "dataset": "Helsinki-NLP/opus_books",
+  "dataset_revision": "1f9f6191d0e91a3c539c2595e2fe48fc1420de9b",
+  "dataset_file": "en-fr/train-00000-of-00001.parquet",
+  "model": "Qwen/Qwen3.5-4B",
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "seed": 1729,
+  "max_new_tokens": 128,
+  "prefill_chunk_size": 2048,
+  "attention_backend": "sdpa",
+  "delta_backend": "fla",
+  "snapshot_device": "cpu",
+  "bootstrap_samples": 10000,
+  "gates": {
+    "short_min_successes": 15,
+    "content_min_successes": 15,
+    "min_control_loss": 0.25,
+    "min_affected_documents": 4
+  }
+}

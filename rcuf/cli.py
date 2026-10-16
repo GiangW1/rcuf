@@ -12,6 +12,31 @@ def main():
     prepare_parser.add_argument("--config", type=Path, default=Path("configs/default.json"))
     prepare_parser.add_argument("--data-dir", type=Path, default=Path("data/pilot"))
     prepare_parser.add_argument("--corpus-jsonl", type=Path)
+    controls_prepare = sub.add_parser("controls-prepare", help="Freeze paired bilingual instruction controls")
+    controls_prepare.add_argument("--config", type=Path, default=Path("configs/controls.json"))
+    controls_prepare.add_argument("--data-dir", type=Path, default=Path("data/language-controls"))
+    controls_prepare.add_argument("--parallel-corpus-jsonl", type=Path)
+    controls_prepare.add_argument("--model")
+    for command in ("controls-launch", "controls-worker", "controls-review", "controls-summarize"):
+        cp = sub.add_parser(command)
+        cp.add_argument("--data-dir", type=Path, default=Path("data/language-controls"))
+        cp.add_argument("--run-dir", type=Path, default=Path("runs/language-controls"))
+        if command in {"controls-launch", "controls-worker"}:
+            cp.add_argument(
+                "--phase",
+                choices=["language", "format"] + (["all"] if command == "controls-launch" else []),
+                default="language" if command == "controls-launch" else None,
+                required=command == "controls-worker",
+            )
+            cp.add_argument("--reviews", type=Path)
+        if command == "controls-launch":
+            cp.add_argument("--devices", default="0,1")
+        if command == "controls-worker":
+            cp.add_argument("--shard", type=int, choices=(0, 1), required=True)
+        if command == "controls-review":
+            cp.add_argument("--output", type=Path, required=True)
+        if command == "controls-summarize":
+            cp.add_argument("--reviews", type=Path)
     confirm_prepare = sub.add_parser(
         "confirm-prepare", help="Freeze exact pilot replay and fresh confirmation"
     )
@@ -62,7 +87,30 @@ def main():
             command_parser.add_argument("--output", type=Path, required=True)
             command_parser.add_argument("--all", action="store_true", dest="review_all")
     args = parser.parse_args()
-    if args.command == "confirm-prepare":
+    if args.command == "controls-prepare":
+        from .controls_data import prepare
+        from .io import read_json
+
+        result = prepare(read_json(args.config), args.data_dir, args.parallel_corpus_jsonl, args.model)
+    elif args.command == "controls-launch":
+        from .controls import launch_controls
+
+        launch_controls(args.data_dir, args.run_dir, args.phase, args.devices, args.reviews)
+        return
+    elif args.command == "controls-worker":
+        from .controls import worker
+
+        worker(args.data_dir, args.run_dir, args.phase, args.shard, args.reviews)
+        return
+    elif args.command == "controls-review":
+        from .controls_analysis import review_export
+
+        result = review_export(args.data_dir, args.run_dir, args.output)
+    elif args.command == "controls-summarize":
+        from .controls_analysis import summarize
+
+        result = summarize(args.data_dir, args.run_dir, args.reviews)
+    elif args.command == "confirm-prepare":
         from .confirm_data import prepare_confirmation
         from .io import read_json
 
