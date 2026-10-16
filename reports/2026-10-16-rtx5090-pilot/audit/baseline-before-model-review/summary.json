@@ -1,0 +1,187 @@
+{
+  "stage": "baseline",
+  "rows": 96,
+  "missing_cells": [],
+  "required_unfinished_reviews": [
+    "03e5feab086e6bb716cd5ae1",
+    "04deb185afee5fb8ce84ba7e",
+    "04e06a5262b587e391bff552",
+    "04e0a591c72db6df885de588",
+    "06d89b0acc204430ff07d8f3",
+    "0cb27471c65761b27a478856",
+    "0ec6693cb88f3839be63eaf1",
+    "0f12a1dd1c30363da31c2127",
+    "0f54eaf859bd014d3c7ffef9",
+    "11dcc2a012ec2a2ce6c03b56",
+    "15dc1df47e44fa116dcb38ee",
+    "19626d6b41469d6a56a3bbc0",
+    "19b85be016126306db9f401d",
+    "1b3287f1a31dc03f8455e5cd",
+    "2142f901517f438229b13e41",
+    "227619d806fe5d7f260de601",
+    "232a651f063c24627efd7739",
+    "244165b9fb7b3b7d78e3622c",
+    "2800253a08635717029ed30b",
+    "2ac3ab9543f42e668c5387a4",
+    "2bc8e7d225ddd81ef305241c",
+    "2cdc43c224fb762ac1b914a6",
+    "2f60114123fb069fe40c618a",
+    "32032aa1ffee59973c0e180f",
+    "32b8934aaa83bd39c2089d76",
+    "3822596984dbda7cda242811",
+    "4be67487511b45ca9cae3121",
+    "4cfe4b25fe312af41b733693",
+    "51da3cfed3a42caf07580ff8",
+    "52834bc4ebfb156309e4e91c",
+    "5393faf466fd5b54e903402d",
+    "59ca66e5ff779a3d7f937702",
+    "5d83731ad45dab35e5325e5f",
+    "60c9d34b7c9e5de0b235a9ce",
+    "6203f50a46c9ef14dbc9ec05",
+    "6be0aeffd2299e1e4feff812",
+    "6dda7402fc09138c2f2f23a6",
+    "6fa0ae8560713bf6a9e668a4",
+    "7009a71ad3f403153ec57528",
+    "70ed0240bbc53b26d7c4c748",
+    "71e315cd189389edade64756",
+    "7abb4fc7610b2b4125cd4ba6",
+    "7ae3344841d41588adff96e2",
+    "7ddee339e07f2a9151b92717",
+    "7de67243aa5a56786953edc2",
+    "832d373d0b085cce13911ba3",
+    "8643edb25b8dee8489dc1b35",
+    "88fcb808544b4ba614ee3222",
+    "8b823c4c50d43fae54e0f20b",
+    "8d761ea47ffdd39fb2b101e5",
+    "8f5073194f73fff6cd2fae19",
+    "93fcaa24595f865c0b4754f5",
+    "9abbcc05ad7408c2df32b36a",
+    "a02738399de2dac8cc2677f9",
+    "a4b9e936ce4b11e660f9f7c0",
+    "a580821344070e570c9da845",
+    "a6001bb1e2d87f8e314bd00a",
+    "a672bacc136748214cb0f674",
+    "a7209c5c30c11d5ac08c489f",
+    "a98e830782510099f810e9da",
+    "aa66d57aba69db3e170b9050",
+    "aaefd478e5f3778b17840315",
+    "ab06cd434a59fb16fa5c6580",
+    "b17e7d6a18e48aafda5f5745",
+    "b27911acab6ccb9779d00453",
+    "b58a4d8dc165aee5eb86f16f",
+    "b63d86b4c0bca0e81bd5b23f",
+    "b67b2952bc1fe4e8d61dc72e",
+    "bc37d973f03c5c653c9ef41f",
+    "c4570270f4da5d0e18ff30a4",
+    "c843193d8851c97061b1f5eb",
+    "cbf2e23883129136acdd9713",
+    "d0cc2486c6f50ba4adba8fcd",
+    "d24f724f8898c0342d32f6a8",
+    "d3c4e5231c0f6ab2a3a78ece",
+    "d76ffe314ae72f117d4100b7",
+    "d919b5e33fd7692fbacfdeb2",
+    "d951d80d8c077e53961220b2",
+    "d9af62df82a1706918ee9fd5",
+    "dca114cc0dd8abe8ef27c19d",
+    "df80d0fa1bd0bb21c4387f33",
+    "e2ccf999d9a9e434bb8e8fc9",
+    "e45138fe950487445a56e631",
+    "e55281622551c4e72378816e",
+    "e6704e545002ce4b90ed0e52",
+    "e71be29b340af702aeced43f",
+    "ed9b68463f9164f962160ea5",
+    "edbbfe1f618ca8c48f712615",
+    "f03c11ab63878fff0f5d323f",
+    "f4eac53d3af5528526d573f2",
+    "f508294a090d6998bf033265",
+    "f728c0fbea42aa267b1b79de",
+    "f72dc8c6c26959ccd3fc9d6d",
+    "f7dcfc1354c557f7a74a936b",
+    "fe62f9413b14ac431f588272",
+    "fff1809454ace4f196a34fd1"
+  ],
+  "complete": true,
+  "review_complete": false,
+  "metrics": [
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 0,
+      "delay": 0,
+      "n": 32,
+      "language_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 32,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 8192,
+      "delay": 0,
+      "n": 32,
+      "language_ok": {
+        "successes": 1,
+        "rate": 0.03125
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 1,
+        "rate": 0.03125
+      }
+    },
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 32,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 32,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    }
+  ],
+  "decision": "pending_review",
+  "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+  "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+  "results_sha256": "03ec3b806355401fd96219365860dda910692cbfd44b081c732b4ccff06a917e",
+  "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+  "conditions": {
+    "short_language_capable": true,
+    "short_content_capable": true,
+    "large_natural_drift": true,
+    "long_content_preserved": true
+  },
+  "drift": {
+    "n": 32,
+    "failure_to_success": 0,
+    "success_to_failure": 32,
+    "net_gains": -32,
+    "difference_rate": -1.0,
+    "paired_bootstrap_95ci": [
+      -1.0,
+      -1.0
+    ]
+  },
+  "provisional_gate_pass": true
+}

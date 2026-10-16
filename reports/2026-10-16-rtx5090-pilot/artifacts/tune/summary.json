@@ -1,0 +1,400 @@
+{
+  "stage": "tune",
+  "rows": 160,
+  "missing_cells": [],
+  "required_unfinished_reviews": [],
+  "complete": true,
+  "review_complete": true,
+  "metrics": [
+    {
+      "method": "add_full",
+      "strength": 0.25,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_full",
+      "strength": 0.25,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    },
+    {
+      "method": "add_full",
+      "strength": 1.0,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_full",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_full",
+      "strength": 4.0,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 7,
+        "rate": 0.875
+      },
+      "joint_ok": {
+        "successes": 7,
+        "rate": 0.875
+      }
+    },
+    {
+      "method": "add_full",
+      "strength": 4.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 0.25,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 0.25,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 1.0,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 4.0,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 7,
+        "rate": 0.875
+      },
+      "joint_ok": {
+        "successes": 7,
+        "rate": 0.875
+      }
+    },
+    {
+      "method": "add_lowrank",
+      "strength": 4.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "baseline",
+      "strength": 0.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 0.25,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 0.25,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 0,
+        "rate": 0.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 0,
+        "rate": 0.0
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 0.5,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 0.5,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 7,
+        "rate": 0.875
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 7,
+        "rate": 0.875
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 1.0,
+      "length": 0,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    },
+    {
+      "method": "replace",
+      "strength": 1.0,
+      "length": 32768,
+      "delay": 0,
+      "n": 8,
+      "language_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "content_ok": {
+        "successes": 8,
+        "rate": 1.0
+      },
+      "joint_ok": {
+        "successes": 8,
+        "rate": 1.0
+      }
+    }
+  ],
+  "decision": "ready",
+  "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+  "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+  "results_sha256": "745fdb56625a5c1281523dc722365655eb17492780f790a88d11f268adc59b01",
+  "note": "Pilot thresholds guide investment; they are not proof of mechanisms or publication quality.",
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review.",
+  "review_file": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/tune-model-review.jsonl"
+}

@@ -1,0 +1,13 @@
+{
+  "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+  "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+  "stage": "smoke",
+  "shard": 0,
+  "shards": 2,
+  "selection_sha256": null,
+  "expected_cells": [
+    "232a651f063c24627efd7739",
+    "999a43b1b31dc66a2da7abb3",
+    "a37c1e379013bd103cd6f605"
+  ]
+}

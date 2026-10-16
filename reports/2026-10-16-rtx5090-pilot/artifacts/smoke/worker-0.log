@@ -1,0 +1,4 @@
+Loading weights:   0%|          | 0/426 [00:00<?, ?it/s]Loading weights: 100%|██████████| 426/426 [00:00<00:00, 7721.98it/s]
+smoke shard=0 1/3 test-000 N=0 {'method': 'baseline', 'strength': 0.0, 'delay': 0} J=1 tokens=62
+smoke shard=0 2/3 test-000 N=0 {'method': 'add_lowrank', 'strength': 1.0, 'delay': 0} J=1 tokens=60
+smoke shard=0 3/3 test-000 N=0 {'method': 'replace', 'strength': 1.0, 'delay': 0} J=1 tokens=62

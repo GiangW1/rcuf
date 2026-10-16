@@ -1,0 +1,14 @@
+{
+  "stage": "compare",
+  "reviewed_at": "2026-10-16T08:42:21.325286+00:00",
+  "input": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/compare-review.jsonl",
+  "output": "/mnt/mydata/wja/rcuf/runs/pilot-20261016b-2gpu/compare-model-review.jsonl",
+  "reviewed_rows": 320,
+  "french_rows": 256,
+  "content_failures": 0,
+  "reviews_sha256": "2e19e55f0735093ea688c61a1d9ce2e292f8a38e11fde48b43f7779980086fb3",
+  "reviewer_type": "AI model (Codex)",
+  "human_review_complete": false,
+  "protocol_deviation": "Model semantic audits substitute for human blind review solely to advance this exploratory pilot. Original unlabeled review exports and generated answers are preserved. Human-reviewed final claims remain pending.",
+  "blinding_limit": "Audit exports hide method/strength/length and automatic labels; the coordinating session knows the experiment and has seen baseline aggregates, so this is not an independent blinded human review."
+}

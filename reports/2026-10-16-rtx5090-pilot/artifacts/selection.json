@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "split": "dev",
+  "strengths": {
+    "add_full": 1.0,
+    "add_lowrank": 1.0,
+    "replace": 1.0
+  },
+  "rank": 4,
+  "manifest_sha256": "9d608544c7a85426f7d69023b998f9bb320f3f05e6b5b8167f83a381d03cc919",
+  "source_sha256": "82df1385fe77e5c374b7b9b1b24bb1c7b2c527cad4a5be9423797b074304b6ec",
+  "reviewed_results_sha256": "745fdb56625a5c1281523dc722365655eb17492780f790a88d11f268adc59b01",
+  "runtime_sha256": "9fabad195277750b2a18008da7f5a3a9c56a839d482478c649e9c54437ef0142",
+  "audit": {
+    "add_full": {
+      "candidates": [
+        {
+          "strength": 0.25,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 0,
+              "rate": 0.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 0,
+              "rate": 0.0
+            }
+          },
+          "admissible": true
+        },
+        {
+          "strength": 1.0,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "admissible": true
+        },
+        {
+          "strength": 4.0,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 7,
+              "rate": 0.875
+            },
+            "joint_ok": {
+              "successes": 7,
+              "rate": 0.875
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "admissible": false
+        }
+      ],
+      "selected_admissible": true
+    },
+    "add_lowrank": {
+      "candidates": [
+        {
+          "strength": 0.25,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 0,
+              "rate": 0.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 0,
+              "rate": 0.0
+            }
+          },
+          "admissible": true
+        },
+        {
+          "strength": 1.0,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "admissible": true
+        },
+        {
+          "strength": 4.0,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 7,
+              "rate": 0.875
+            },
+            "joint_ok": {
+              "successes": 7,
+              "rate": 0.875
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "admissible": false
+        }
+      ],
+      "selected_admissible": true
+    },
+    "replace": {
+      "candidates": [
+        {
+          "strength": 0.25,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 0,
+              "rate": 0.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 0,
+              "rate": 0.0
+            }
+          },
+          "admissible": true
+        },
+        {
+          "strength": 0.5,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 7,
+              "rate": 0.875
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 7,
+              "rate": 0.875
+            }
+          },
+          "admissible": true
+        },
+        {
+          "strength": 1.0,
+          "short": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "long": {
+            "n": 8,
+            "language_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "content_ok": {
+              "successes": 8,
+              "rate": 1.0
+            },
+            "joint_ok": {
+              "successes": 8,
+              "rate": 1.0
+            }
+          },
+          "admissible": true
+        }
+      ],
+      "selected_admissible": true
+    }
+  }
+}

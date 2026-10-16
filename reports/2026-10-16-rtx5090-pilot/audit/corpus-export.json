@@ -1,0 +1,16 @@
+{
+  "source": {
+    "dataset": "wikimedia/wikipedia",
+    "config": "20231101.en",
+    "hf_revision": "b04c8d1ceb2f5cd4588862100d08de323dccfbaa",
+    "file": "20231101.en/train-00000-of-00041.parquet",
+    "local_path": "/mnt/mydata/wja/rcuf/assets/wikipedia-20231101.en/train-00000-of-00041.parquet",
+    "sha256": "382e7f6f09e488b24793a7f7cfc659879d5a22da2cf2efec6491665f0c019677",
+    "mirror_revision": "5e6791ec3e11c751d4a70699a7ebd865fc6d8af4",
+    "size": 420296449
+  },
+  "output": "/mnt/mydata/wja/rcuf/assets/wikipedia-20231101.en/corpus-first-4000.jsonl",
+  "rows": 4000,
+  "sha256": "4691727f20e513e6269bb9b8e691fc18eb9794942b59434b5127522f99fbcce9",
+  "selection": "first 4000 rows in official first parquet shard, preserving order"
+}
