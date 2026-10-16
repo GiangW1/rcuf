@@ -17,7 +17,10 @@ def test_projection_is_on_key_axis_and_idempotent():
     projection = u @ u.transpose(-1, -2)
     complement = torch.eye(7) - projection
     torch.testing.assert_close(u.transpose(-1, -2) @ edited, u.transpose(-1, -2) @ french)
-    torch.testing.assert_close(complement @ edited, complement @ state, atol=2e-6, rtol=2e-6)
+    # FP32 SVD orthogonality error scales with the intervention, including near
+    # zero output coordinates. Test leakage relative to the edit, not each entry.
+    leakage = (complement @ (edited - state)).double().norm()
+    assert leakage / (edited - state).double().norm() < 2e-6
     torch.testing.assert_close(edit_state(edited, anchor, "replace", 1.0), edited, atol=2e-6, rtol=2e-6)
 
 

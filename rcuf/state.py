@@ -84,10 +84,18 @@ def edit_state(state: torch.Tensor, anchor: Anchor, method: str, strength: float
         delta = strength * anchor.difference
     elif method == "add_lowrank":
         delta = strength * anchor.low_rank_difference
-    elif method in {"replace", "wrong_anchor"}:
-        target = anchor.french if method == "replace" else anchor.english
+    elif method in {"replace", "wrong_anchor", "replace_norm_matched"}:
+        target = anchor.english if method == "wrong_anchor" else anchor.french
         u = anchor.basis
         delta = strength * (u @ (u.transpose(-1, -2) @ (target - state)))
+        if method == "replace_norm_matched":
+            # Match the additive intervention's Frobenius norm in EACH layer,
+            # using this unedited state. This soft replacement is not idempotent.
+            wanted = abs(strength) * anchor.low_rank_difference.double().norm()
+            native = delta.double().norm()
+            if native == 0 and wanted > 0:
+                raise ValueError("Cannot match a positive norm with a zero replacement direction.")
+            delta = delta * (wanted / native.clamp_min(1e-30)).to(delta.dtype)
     else:
         raise ValueError(f"Unknown state method: {method}")
     return state + delta
@@ -99,16 +107,24 @@ def edit_cache(cache, anchors: dict[int, Anchor], method: str, strength: float) 
     if states.keys() != anchors.keys():
         raise ValueError("Cache and anchor layer sets differ.")
     squared_delta = squared_state = 0.0
+    layer_audit = {}
     for i, state in states.items():
         updated = edit_state(state, anchors[i], method, strength)
         if not torch.isfinite(updated).all():
             raise ValueError(f"Non-finite edited state in layer {i}")
-        squared_delta += (updated - state).double().square().sum().item()
+        actual_norm = (updated - state).double().norm().item()
+        squared_delta += actual_norm**2
         squared_state += state.double().square().sum().item()
+        if method == "replace_norm_matched":
+            wanted = abs(strength) * anchors[i].low_rank_difference.double().norm().item()
+            if abs(actual_norm - wanted) > 1e-6 + 1e-5 * wanted:
+                raise ValueError(f"Layer {i}: norm matching failed: {actual_norm} vs {wanted}")
+            layer_audit[str(i)] = {"actual_norm": actual_norm, "target_additive_norm": wanted}
         state.copy_(updated)
     return {
         "edit_frobenius_norm": squared_delta**0.5,
         "state_frobenius_norm": squared_state**0.5,
         "relative_edit_norm": (squared_delta / max(squared_state, 1e-30)) ** 0.5,
         "edited_layers": len(states),
+        **({"norm_match_per_layer": layer_audit} if layer_audit else {}),
     }

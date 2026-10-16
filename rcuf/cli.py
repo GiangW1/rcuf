@@ -12,6 +12,35 @@ def main():
     prepare_parser.add_argument("--config", type=Path, default=Path("configs/default.json"))
     prepare_parser.add_argument("--data-dir", type=Path, default=Path("data/pilot"))
     prepare_parser.add_argument("--corpus-jsonl", type=Path)
+    confirm_prepare = sub.add_parser(
+        "confirm-prepare", help="Freeze exact pilot replay and fresh confirmation"
+    )
+    confirm_prepare.add_argument("--config", type=Path, default=Path("configs/confirmation.json"))
+    confirm_prepare.add_argument("--pilot-data-dir", type=Path, required=True)
+    confirm_prepare.add_argument("--data-dir", type=Path, default=Path("data/confirmation"))
+    confirm_prepare.add_argument("--english-corpus-jsonl", type=Path)
+    confirm_prepare.add_argument("--french-corpus-jsonl", type=Path)
+    confirm_prepare.add_argument("--model", help="Optional relocated local model directory or fixed model ID")
+    for command in ("confirm-launch", "confirm-worker", "confirm-review", "confirm-summarize"):
+        cp = sub.add_parser(command)
+        cp.add_argument("--data-dir", type=Path, default=Path("data/confirmation"))
+        cp.add_argument("--run-dir", type=Path, default=Path("runs/confirmation"))
+        if command in {"confirm-launch", "confirm-worker"}:
+            choices = ["smoke", "crossover-a", "crossover-b", "confirm"]
+            cp.add_argument(
+                "--phase",
+                choices=choices + (["all"] if command == "confirm-launch" else []),
+                default="all" if command == "confirm-launch" else None,
+                required=command == "confirm-worker",
+            )
+        if command == "confirm-launch":
+            cp.add_argument("--devices", default="0,1")
+        if command == "confirm-worker":
+            cp.add_argument("--shard", type=int, choices=(0, 1), required=True)
+        if command == "confirm-review":
+            cp.add_argument("--output", type=Path, required=True)
+        if command == "confirm-summarize":
+            cp.add_argument("--reviews", type=Path)
     for command in ("launch", "worker", "summarize", "review", "select"):
         command_parser = sub.add_parser(command)
         command_parser.add_argument("--data-dir", type=Path, default=Path("data/pilot"))
@@ -33,7 +62,37 @@ def main():
             command_parser.add_argument("--output", type=Path, required=True)
             command_parser.add_argument("--all", action="store_true", dest="review_all")
     args = parser.parse_args()
-    if args.command == "prepare":
+    if args.command == "confirm-prepare":
+        from .confirm_data import prepare_confirmation
+        from .io import read_json
+
+        result = prepare_confirmation(
+            read_json(args.config),
+            args.pilot_data_dir,
+            args.data_dir,
+            args.english_corpus_jsonl,
+            args.french_corpus_jsonl,
+            args.model,
+        )
+    elif args.command == "confirm-launch":
+        from .confirm import launch_confirmation
+
+        launch_confirmation(args.data_dir, args.run_dir, args.phase, args.devices)
+        return
+    elif args.command == "confirm-worker":
+        from .confirm import worker
+
+        worker(args.data_dir, args.run_dir, args.phase, args.shard)
+        return
+    elif args.command == "confirm-review":
+        from .confirm_analysis import export_confirmation_reviews
+
+        result = export_confirmation_reviews(args.data_dir, args.run_dir, args.output)
+    elif args.command == "confirm-summarize":
+        from .confirm_analysis import summarize_confirmation
+
+        result = summarize_confirmation(args.data_dir, args.run_dir, args.reviews)
+    elif args.command == "prepare":
         from .data import prepare
         from .io import load_config
 

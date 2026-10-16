@@ -15,12 +15,19 @@ from .processes import defer_termination, exclusive_lock, termination_signals
 from .runner import load_selection, require_previous_gate
 
 
-def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
+def launch(data_dir: Path, run_dir: Path, stage: str, devices: str, *, confirmation=False) -> None:
     selected_devices = [device.strip() for device in devices.split(",")]
     if any(not device for device in selected_devices) or len(set(selected_devices)) != len(selected_devices):
         raise ValueError("Specify distinct GPU IDs, e.g. --devices 0,1.")
-    manifest, _ = load_data(data_dir)
-    require_previous_gate(run_dir, stage, manifest)
+    if confirmation:
+        from .confirm_data import load_confirmation
+
+        if len(selected_devices) != 2:
+            raise ValueError("Confirmation needs exactly two distinct physical GPUs.")
+        manifest, _ = load_confirmation(data_dir)
+    else:
+        manifest, _ = load_data(data_dir)
+        require_previous_gate(run_dir, stage, manifest)
     run_dir.mkdir(parents=True, exist_ok=True)
     bind_metadata(
         run_dir / "experiment.json",
@@ -29,7 +36,10 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
             "source_sha256": provenance()["source_sha256"],
         },
     )
-    if stage in {"compare", "delay"}:
+    if confirmation:
+        # Device order stays fixed: crossover-b reverses the document assignment.
+        bind_metadata(run_dir / "confirmation-devices.json", {"ordered_devices": selected_devices})
+    elif stage in {"compare", "delay"}:
         load_selection(run_dir, manifest)
     stage_dir = run_dir / stage
     stage_dir.mkdir(parents=True, exist_ok=True)
@@ -50,18 +60,18 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
                     sys.executable,
                     "-m",
                     "rcuf.cli",
-                    "worker",
+                    "confirm-worker" if confirmation else "worker",
                     "--data-dir",
                     str(data_dir),
                     "--run-dir",
                     str(run_dir),
-                    "--stage",
+                    "--phase" if confirmation else "--stage",
                     stage,
                     "--shard",
                     str(shard),
-                    "--shards",
-                    str(len(selected_devices)),
                 ]
+                if not confirmation:
+                    command.extend(["--shards", str(len(selected_devices))])
                 with defer_termination():
                     process = subprocess.Popen(
                         command, env=env, stdout=stream, stderr=subprocess.STDOUT, start_new_session=True
@@ -86,8 +96,9 @@ def launch(data_dir: Path, run_dir: Path, stage: str, devices: str) -> None:
                 time.sleep(1)
             if any(process.returncode for process in processes):
                 raise RuntimeError("A worker failed. Read worker-*.log.")
+            summarize = "confirm-summarize" if confirmation else f"summarize --stage {stage}"
             print(
-                f"{stage} complete. Run rcuf summarize --data-dir {data_dir} --run-dir {run_dir} --stage {stage}",
+                f"{stage} complete. Run rcuf {summarize} --data-dir {data_dir} --run-dir {run_dir}",
                 flush=True,
             )
         finally:
