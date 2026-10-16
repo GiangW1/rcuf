@@ -4,9 +4,11 @@
 
 默认模型仍为固定版本的 `Qwen/Qwen3.5-4B`，不是纯 Transformer 的 `Qwen3-4B`。两张 A100 80GB 各运行一份模型，按文档编号奇偶分工；同一文档的所有条件在同一张卡上运行，每次回答都从 token 0 独立预填。无训练、无 DDP、无 tensor parallel。两关最多 **480 条正式回答**；不增加调参集或独立 smoke 回答。每个 worker 仍先执行实际缓存路径检查，失败即停止。
 
-**当前协议为 v2。** PR3 复审修复了混合语言背景漏检、生成截断造成的假阳性、复核文件静默回退和跨阶段续跑问题。请重新制备到下方 `*-v2` 目录；已生成的 v1 数据/结果保留原样，不能续接或混入 v2。模型、样本量、长度、提问因素及效应门槛不变，新增材料分块语言审核及零生成截断的有效性要求。
+**当前协议为 v2，默认语料改为 OpenSubtitles 平行句对。** PR3 复审修复了混合语言背景漏检、生成截断造成的假阳性、复核文件静默回退和跨阶段续跑问题。请重新制备到下方 `*-v2-subtitles` 目录；已生成的 v1 或旧语料 v2 数据/结果保留原样，不能续接或混入。模型、16 组样本、长度、提问因素及所有效应/有效性门槛不变。
 
-**当前不能直接开跑：默认语料不足。** 对固定 OPUS Books 全量源进行 v2 规则重筛，即使检查更短完整窗口并允许整对列方向校正，也只找到 **14 组**合格材料，少于登记的 16 组。默认 `controls-prepare` 现在会在下载/模型加载前明确拒绝运行。需要先批准扩充或更换平行语料并验证至少 16 组合格材料；不降低样本量、不放宽长度/纯度、不复用 v1 混合语言样本。下面的运行流程以这一数据阻断已解决为前提，不代表当前默认配置可用。
+数据制备与独立重放审计均使用固定版本的真实 Qwen tokenizer，在 CPU 上执行，不运行 4B 生成模型。审计记录见 [data-audit-controls-v2-subtitles.json](data-audit-controls-v2-subtitles.json)；它是输入可用性的证据，**不是实验阳性结果或 A100 性能测试**。
+
+本次全量扫描 3,870,286 行，得到 **24 个**满足现有全部自动条件的不重叠窗口；固定 seed 抽取 **16 组**，生成并重放验证 **480 条**完整输入（A 288、B 192）。32 段背景实际为 **7,783–8,205 token**，无需降低样本量或放宽长度条件。
 
 ## 1. 固定设计
 
@@ -26,19 +28,23 @@ JSON 必须恰好包含 `code`（字符串）和 `budget_eur`（整数）；XML 
 
 ## 2. 英法材料如何配对
 
-默认读取 [Helsinki-NLP/opus_books 的 en-fr 数据](https://huggingface.co/datasets/Helsinki-NLP/opus_books)，固定 revision `1f9f6191d0e91a3c539c2595e2fe48fc1420de9b`、Parquet 文件及其 SHA256。它提供逐单元英法对齐文本，**不是分别抽两批独立文章**。
+默认读取 [Sentence Transformers 发布的 OpenSubtitles 英法句对](https://huggingface.co/datasets/sentence-transformers/parallel-sentences-opensubtitles)，固定 revision `d86a387587ab6f2fd9ec7453b2765cec68111c87`，只使用 `en-fr/train-00000-of-00002.parquet`，**不是全库或两批独立文章**。该文件有 3,870,286 行、201,725,376 字节（约 202 MB）；`english` / `non_english` 分别映射到 en / fr，原始行序不变，行号作为源 ID。文件 SHA256 固定为 `9c1fc17a1d82ff60e0a243679c92c86967cd73eacaef6d8469915f42e0fef921`，下载后先校验内容再解析。
 
 程序沿源顺序收集完整对齐单元，要求两种实际文本都处于 **7783–8601 token**，组内长度差除以较长一边不超过 5%。不单独截断某种语言、不添加填充。检测到明显指令改写、特殊角色 token 或格式示例时清空窗口。两边须同时通过整段和 **256-token 分块**的语言检查，每块都须识别为对应语言且置信度 ≥0.98；不足 128 token 的尾块并入上一块，不漏检尾部。
 
-数据源部分书籍的列语言方向反转：只有整对的语言识别均高置信度反向时，才交换**整对**原文列，并再次执行所有分块检查；保存 `source_columns` 记录，原文没有改写。片段内部混合语言仍不合格，不逐段拼凑/交换，不做机器翻译。每个位置除检查最长窗口外，也通过同时移除两边相同的完整对齐单元检查更短后缀，避免漏掉符合长度条件的窗口；仍不单侧截断。合格窗口不复用源单元 ID，全部扫描完成后固定 seed 抽取 16 组。条件不足直接报错，不自动放宽长度、换 seed 或改任务。
+只有整对的语言识别均高置信度反向时，才允许交换**整对**原文列，并再次执行所有分块检查；保存 `source_columns` 记录，原文没有改写。片段内部混合语言仍不合格，不逐段拼凑/交换，不做机器翻译。每个位置除检查最长窗口外，也通过同时移除两边相同的完整对齐单元检查更短后缀，避免漏掉符合长度条件的窗口；仍不单侧截断。合格窗口不复用源单元 ID，**完整扫描上述登记文件之后**才按固定 seed 抽取 16 组，不是凑到 16 组就停止。条件不足直接报错，不自动放宽长度、换 seed 或改任务。
 
-v1 的数据审查发现 3/16 组含连续大段异语文本（原 `controls-003`、`controls-011`、`controls-015`），虽然整段分类通过，也不能用于纯英/法背景对照。因此 v1 的“17 个合格窗口”不作为 v2 的有效性证据。全量 v2 筛选结果为 14 组，不足 16；未生成正式 v2 输入或模型回答。v2 保存完整分块检测记录并检查覆盖范围，仍需人工检查语义对齐。这些制备检查**不运行 4B 模型，也不产生实验结果**。
+此前 OPUS Books 全量严格筛选只剩 14 组，不足 16；用户已同意扩充/更换语料。本次换源没有放宽任何门槛，也没有把旧 Books 材料拼入新库。v1 中原 `controls-003`、`controls-011`、`controls-015` 的大段异语问题仍视为无效，不能复用。另检查的 Europarl 第一分片（1,025,507 行）没有找到满足全部条件的窗口，也未进入正式数据。
+
+独立审计会重新读取固定源，逐一重建选中片段，核对源单元/片段哈希、实际 token 数、整段及全部语言分块，并从完整聊天模板重放 480 条输入，核对 token、问题切分点及指纹。审计不替代语义对齐人工检查；完整候选池数量由制备时全文件扫描得到，独立审计只重检选中片段。不要把这些输入检查称为模型结果。
+
+另由代码审查代理抽看每组选中窗口的起点、1/4、中点、3/4、末尾，共 80 个源单元。多数译文情节/人物对应，但可见个别意译或单句错配；这只是代理抽查，不是人工完成的 16 组全文逐句双语认证。多个片段也出现 Darrin / Endora 等重复角色名，不应视为 16 部独立作品。不要用语言识别置信度或输入重放成功来代替这些语义与独立性限制。
 
 注意三个限制：
 
-- OPUS Books 是翻译文学文本，不是上一轮 Wikipedia 资料；本轮不是对上一轮材料的精确复现。数据卡也提示部分对齐不完善，自动筛选不等于人工核验。运行前请检查 `backgrounds.jsonl` 的英法对应及是否残留指令性文本。
-- 不重叠源单元不等于不同书籍。多个片段可能来自同一本书；16 个文档的区间只反映本批片段，不提供跨书籍/跨语料的独立性保证。翻译风格、英文 system 和固定英文字段名也限制外推。
-- 原始文本受数据源许可与使用条件约束，适用研究/教育等用途；不将全文材料、准备后的 token 流或模型权重提交进 Git。源码只固定来源与抽样算法。
+- 背景现在是影视字幕句对形成的片段，不是 Wikipedia、文学或议会文本；句对的源文件行序不等于完整连贯文章。发布方数据卡明确提醒存在空白和译文错配，语言检测通过不代表语义等同。结果只能解释本批筛选后的字幕背景，不能声称精确复现上一轮 Wikipedia 效应。运行前请检查 `backgrounds.jsonl` 的英法对应及是否残留指令性文本。
+- 不重叠源行不等于不同影视作品。相同作品的字幕版本、重复台词和说话风格可能相关；16 个片段的区间不提供跨作品/跨语料的独立性保证。严格等长筛选也可能偏向特定翻译风格，英文 system 和固定英文字段名同样限制外推。
+- 原始文本受数据源许可与使用条件约束；数据发布页未提供明确统一许可，本仓库不授予语料再分发权。遵守 [OpenSubtitles](https://www.opensubtitles.org/) 及 [OPUS 原始语料说明](https://opus.nlpl.eu/OpenSubtitles.php) 的使用/署名要求；论文引用 Lison & Tiedemann (2016)。不将全文材料、准备后的 token 流或模型权重提交进 Git，只公开来源、算法及无正文的审计元数据。
 
 也可在**看输出之前**指定自有对齐 JSONL，每行例如 `{"id":"unique-source-unit","translation":{"en":"...","fr":"..."}}`，使用 `--parallel-corpus-jsonl /path/to/en-fr.jsonl`。必须提供足够多、可连续拼接的真实对齐单元，源 ID 唯一；一整篇不满足长度约束的文本不会被单侧截断。源文件 SHA256 写入 manifest。换源构成新实验，不可沿用默认语料的结论或混入旧运行目录。
 
@@ -79,27 +85,33 @@ A 过关才能启动 B。自动评分只决定是否暂时继续省算力，**�
 
 ## 4. 服务器运行：两张 A100 80GB
 
-**先解决上述语料阻断，再运行此节。** 以下示例假设已批准并验证一个足量的本地平行 JSONL，路径需替换为实际路径。在本 PR 分支、仓库根目录执行。可沿用之前经过检查的 `rcuf` 环境；新建环境的 CUDA/FLA 安装步骤见主 README。不要改 Grace 环境。
+在本 PR 分支、仓库根目录执行。可沿用之前经过检查的 `rcuf` 环境；新建环境的 CUDA/FLA 安装步骤见主 README。不要改 Grace 环境。先保存现有本地修改，不要丢弃旧实验。下载 tokenizer/语料及 CPU 筛选无需占用 GPU；制备会扫描完整登记文件，请等待最终输出 16 组和 480 条输入。
 
 ```bash
 conda activate rcuf
 git fetch origin experiment/language-controls
-git switch --track origin/experiment/language-controls
+git switch experiment/language-controls
+git merge --ff-only origin/experiment/language-controls
 python -m pip install -e '.[dev]'
 python -m pytest
 python scripts/doctor.py
 
-python -m rcuf.cli controls-prepare \
-  --parallel-corpus-jsonl /absolute/path/to/approved-en-fr.jsonl \
-  --data-dir data/language-controls-v2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python -m rcuf.cli controls-prepare \
+  --data-dir data/language-controls-v2-subtitles
+
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python -m scripts.audit_controls_data \
+  --data-dir data/language-controls-v2-subtitles \
+  --output data/language-controls-v2-subtitles/data-audit.json
 
 python -m rcuf.cli controls-launch \
-  --data-dir data/language-controls-v2 \
-  --run-dir runs/language-controls-v2 \
+  --data-dir data/language-controls-v2-subtitles \
+  --run-dir runs/language-controls-v2-subtitles \
   --phase all --devices 0,1
 ```
 
 `controls-prepare` 默认下载/复用固定 revision 的官方 checkpoint tokenizer；生成阶段下载/复用其权重。若服务器已有该 revision 的原始权重，可在制备命令追加 `--model /absolute/path/to/Qwen3.5-4B`。本地目录必须确实对应上述固定 revision，不能使用训练后权重；目录的 tokenizer/config 检查不等价于逐权重文件内容验证，程序不会替你证明本地副本的官方来源。没有可确认的本地副本时优先使用默认模型 ID。
+
+全量 CPU 筛选可能需要数十分钟，每扫描 10,000 行会打印进度；此时没有加载 4B 权重或占用 GPU，不要因一段时间没增加合格数量而放宽条件。若 Hugging Face 的 Xet 下载卡住，可只在制备命令前追加 `HF_HUB_DISABLE_XET=1` 重试；保持数据源、revision、文件哈希和配置不变。独立审计输出文件不能覆盖，重做审计请另用新文件名。
 
 `--phase all` 顺序跑 A、暂定门槛通过后再跑 B；A 未过会保存汇总并报错，**不会启动 B**。默认不指定 `--phase` 则只跑 A，适合先人工复核再决定 B。终端建议放在 tmux 中。启动器每约 30 秒报告 worker 状态，逐条进度在 `language/worker-*.log`、`format/worker-*.log`；一边失败会停止另一边。
 
@@ -109,11 +121,11 @@ python -m rcuf.cli controls-launch \
 
 ```bash
 python -m rcuf.cli controls-summarize \
-  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2
+  --data-dir data/language-controls-v2-subtitles --run-dir runs/language-controls-v2-subtitles
 
 python -m rcuf.cli controls-review \
-  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2 \
-  --output runs/language-controls-v2/review-unlabeled.jsonl
+  --data-dir data/language-controls-v2-subtitles --run-dir runs/language-controls-v2-subtitles \
+  --output runs/language-controls-v2-subtitles/review-unlabeled.jsonl
 ```
 
 导出文件随机顺序，隐藏 system 目标、背景/问题条件和自动分数，只展示答案与正确记录。请保留 `cell_id`、`output_sha256`、`answer`、`expected_target`，填写：
@@ -130,17 +142,17 @@ python -m rcuf.cli controls-review \
 
 ```bash
 python -m rcuf.cli controls-summarize \
-  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2 \
-  --reviews runs/language-controls-v2/review-filled.jsonl
+  --data-dir data/language-controls-v2-subtitles --run-dir runs/language-controls-v2-subtitles \
+  --reviews runs/language-controls-v2-subtitles/review-filled.jsonl
 ```
 
 如果只跑过 A，且人工复核后的 A 达标，可继续：
 
 ```bash
 python -m rcuf.cli controls-launch \
-  --data-dir data/language-controls-v2 --run-dir runs/language-controls-v2 \
+  --data-dir data/language-controls-v2-subtitles --run-dir runs/language-controls-v2-subtitles \
   --phase format --devices 0,1 \
-  --reviews runs/language-controls-v2/review-filled.jsonl
+  --reviews runs/language-controls-v2-subtitles/review-filled.jsonl
 ```
 
 B 的首次启动把门槛来源与复核文件哈希写入 `format-gate.json`。续跑 B 必须使用相同参数和**未修改的该文件**。全部生成后，用新的 `--output` 路径导出 480 行复核表；已有 A 标签可按 `cell_id` 转移，保持答案/哈希/目标绑定，补齐 B 内容标签，再用新的完整复核文件做最终 summarize。原始复核文件不可覆盖，也不要修改已经用于 B 续跑的标签文件。

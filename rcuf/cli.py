@@ -14,13 +14,15 @@ def main():
     prepare_parser.add_argument("--corpus-jsonl", type=Path)
     controls_prepare = sub.add_parser("controls-prepare", help="Freeze paired bilingual instruction controls")
     controls_prepare.add_argument("--config", type=Path, default=Path("configs/controls.json"))
-    controls_prepare.add_argument("--data-dir", type=Path, default=Path("data/language-controls"))
+    controls_prepare.add_argument(
+        "--data-dir", type=Path, default=Path("data/language-controls-v2-subtitles")
+    )
     controls_prepare.add_argument("--parallel-corpus-jsonl", type=Path)
     controls_prepare.add_argument("--model")
     for command in ("controls-launch", "controls-worker", "controls-review", "controls-summarize"):
         cp = sub.add_parser(command)
-        cp.add_argument("--data-dir", type=Path, default=Path("data/language-controls"))
-        cp.add_argument("--run-dir", type=Path, default=Path("runs/language-controls"))
+        cp.add_argument("--data-dir", type=Path, default=Path("data/language-controls-v2-subtitles"))
+        cp.add_argument("--run-dir", type=Path, default=Path("runs/language-controls-v2-subtitles"))
         if command in {"controls-launch", "controls-worker"}:
             cp.add_argument(
                 "--phase",

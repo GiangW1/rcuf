@@ -1,0 +1,413 @@
+{
+  "audit": "rcuf-controls-source-tokenizer-replay-v1",
+  "model_generation_performed": false,
+  "manifest_sha256": "c811b41ca5aaed763f93674eb9ea030844a030372a9bb0100f88d1b9e4ef659c",
+  "tokenizer_sha256": "54577aac03218dea4f1ac5d4d3687b261d225c84be616de53c14624328dc23c0",
+  "backgrounds_sha256": "8b4203f443d7e01dcd70a0bbe3860d093fcdaf929d69ea887be3eefe53e98510",
+  "examples_sha256": "397fe20d1303f7955a543bde43f83781a5a60e5ba14ea1c025397ffdc86aed10",
+  "config": {
+    "protocol": "rcuf-language-controls-v2",
+    "documents": 16,
+    "record_seed": 26101717,
+    "corpus_seed": 26101718,
+    "target_tokens": 8192,
+    "length_tolerance": 0.05,
+    "pair_length_tolerance": 0.05,
+    "language_audit_chunk_tokens": 256,
+    "language_audit_min_confidence": 0.98,
+    "allow_reversed_parallel_columns": true,
+    "dataset": "sentence-transformers/parallel-sentences-opensubtitles",
+    "dataset_revision": "d86a387587ab6f2fd9ec7453b2765cec68111c87",
+    "dataset_file": "en-fr/train-00000-of-00002.parquet",
+    "dataset_sha256": "9c1fc17a1d82ff60e0a243679c92c86967cd73eacaef6d8469915f42e0fef921",
+    "dataset_columns": {
+      "en": "english",
+      "fr": "non_english"
+    },
+    "model": "Qwen/Qwen3.5-4B",
+    "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "seed": 1729,
+    "max_new_tokens": 128,
+    "prefill_chunk_size": 2048,
+    "attention_backend": "sdpa",
+    "delta_backend": "fla",
+    "snapshot_device": "cpu",
+    "bootstrap_samples": 10000,
+    "gates": {
+      "max_truncated_answers": 0,
+      "short_min_successes": 15,
+      "content_min_successes": 15,
+      "min_control_loss": 0.25,
+      "min_affected_documents": 4
+    }
+  },
+  "source": {
+    "kind": "huggingface_parquet",
+    "dataset": "sentence-transformers/parallel-sentences-opensubtitles",
+    "revision": "d86a387587ab6f2fd9ec7453b2765cec68111c87",
+    "file": "en-fr/train-00000-of-00002.parquet",
+    "sha256": "9c1fc17a1d82ff60e0a243679c92c86967cd73eacaef6d8469915f42e0fef921",
+    "aligned_units": 3870286,
+    "columns": {
+      "en": "english",
+      "fr": "non_english"
+    }
+  },
+  "scanned_aligned_units": 3870286,
+  "eligible_passages": 24,
+  "selected_documents": 16,
+  "selected_distinct_source_units": 11604,
+  "replayed_examples": 480,
+  "families": {
+    "language": 288,
+    "format": 192
+  },
+  "input_tokens": {
+    "min": 187,
+    "max": 8448
+  },
+  "documents": [
+    {
+      "doc_id": "controls-000",
+      "tokens": {
+        "en": 7951,
+        "fr": 7794
+      },
+      "relative_length_gap": 0.019745943906426866,
+      "source_unit_count": 769,
+      "first_source_id": "2930134",
+      "last_source_id": "2930902",
+      "source_units_sha256": "673b440327258d0a427901d9e0fa65dad88ef3f39c127c1dfc9c49784391f48f",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 31,
+        "fr": 30
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-001",
+      "tokens": {
+        "en": 7795,
+        "fr": 8146
+      },
+      "relative_length_gap": 0.04308863245764793,
+      "source_unit_count": 698,
+      "first_source_id": "3642568",
+      "last_source_id": "3643265",
+      "source_units_sha256": "5a9d745823565becd15f96d261d530cdb9af33e97cbb54ba6e57aee276842ced",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 32
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-002",
+      "tokens": {
+        "en": 7796,
+        "fr": 8180
+      },
+      "relative_length_gap": 0.0469437652811736,
+      "source_unit_count": 756,
+      "first_source_id": "3653571",
+      "last_source_id": "3654326",
+      "source_units_sha256": "9fbcc9be445fe10d6fc60f0dfba2f6526946c3e17bfabc6d0e0d0bfdef457809",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 32
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-003",
+      "tokens": {
+        "en": 7805,
+        "fr": 7828
+      },
+      "relative_length_gap": 0.0029381706693919264,
+      "source_unit_count": 700,
+      "first_source_id": "2100933",
+      "last_source_id": "2101632",
+      "source_units_sha256": "66bbcfb1b70d18b8486b59aa42415e66d83a1a8ea400a73dd51ddad209c8837b",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-004",
+      "tokens": {
+        "en": 7792,
+        "fr": 8175
+      },
+      "relative_length_gap": 0.046850152905198776,
+      "source_unit_count": 725,
+      "first_source_id": "326922",
+      "last_source_id": "327646",
+      "source_units_sha256": "1d478d9677bdfb9f852e195755e337870a54dfb8fefdde9ebfdd25ce0427d2f5",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 32
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-005",
+      "tokens": {
+        "en": 7793,
+        "fr": 8030
+      },
+      "relative_length_gap": 0.02951432129514321,
+      "source_unit_count": 681,
+      "first_source_id": "1719533",
+      "last_source_id": "1720213",
+      "source_units_sha256": "df9d884a0dceddb54fb153d85fc167de125f58e1c88934f1479f8a30d7f877e1",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-006",
+      "tokens": {
+        "en": 7784,
+        "fr": 8191
+      },
+      "relative_length_gap": 0.04968868270052497,
+      "source_unit_count": 745,
+      "first_source_id": "3420788",
+      "last_source_id": "3421532",
+      "source_units_sha256": "8a72df38815bb3dfb760671971b2b330aa2f9e2caf6cc431735870d964e44a0a",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 32
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-007",
+      "tokens": {
+        "en": 7802,
+        "fr": 7788
+      },
+      "relative_length_gap": 0.0017944116893104333,
+      "source_unit_count": 751,
+      "first_source_id": "3014523",
+      "last_source_id": "3015273",
+      "source_units_sha256": "0d704149dd58d17f7949eaf8e10a5aefa5343fe503fc012690e400ed3e63a5bd",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 30
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-008",
+      "tokens": {
+        "en": 7789,
+        "fr": 7948
+      },
+      "relative_length_gap": 0.02000503271263211,
+      "source_unit_count": 712,
+      "first_source_id": "3019756",
+      "last_source_id": "3020467",
+      "source_units_sha256": "2394cac5ce8002d7165165e73182fabf84d266222be6c42eb521203325c40a09",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-009",
+      "tokens": {
+        "en": 7787,
+        "fr": 8000
+      },
+      "relative_length_gap": 0.026625,
+      "source_unit_count": 738,
+      "first_source_id": "128034",
+      "last_source_id": "128771",
+      "source_units_sha256": "6898f44126e831b84a7b70318a7059a6e8479cf9995f3145c85bd9a5990bf747",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-010",
+      "tokens": {
+        "en": 7791,
+        "fr": 8036
+      },
+      "relative_length_gap": 0.03048780487804878,
+      "source_unit_count": 685,
+      "first_source_id": "927663",
+      "last_source_id": "928347",
+      "source_units_sha256": "58c86084b4a2053c0d9723da1a81cd71f6fcef6c220db6074786d5c775284a20",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-011",
+      "tokens": {
+        "en": 8205,
+        "fr": 7796
+      },
+      "relative_length_gap": 0.04984765386959171,
+      "source_unit_count": 555,
+      "first_source_id": "1545733",
+      "last_source_id": "1546287",
+      "source_units_sha256": "5c618ba6aa0486100ffeaaa083eb523f6a5638c4d8f79ce86eaaf85638186e24",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 32,
+        "fr": 30
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-012",
+      "tokens": {
+        "en": 7792,
+        "fr": 7924
+      },
+      "relative_length_gap": 0.016658253407370014,
+      "source_unit_count": 752,
+      "first_source_id": "3201990",
+      "last_source_id": "3202741",
+      "source_units_sha256": "90c0b9495fd53518670fd5413f7bcfc3786f97373fc20ec91d8b6a779aa0f7cc",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-013",
+      "tokens": {
+        "en": 7792,
+        "fr": 7832
+      },
+      "relative_length_gap": 0.005107252298263534,
+      "source_unit_count": 723,
+      "first_source_id": "3360471",
+      "last_source_id": "3361193",
+      "source_units_sha256": "078dc584a61b45be31f6e81a3c78a4b2e82d100a97c054363bcc28e76ec3f413",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 31
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-014",
+      "tokens": {
+        "en": 7783,
+        "fr": 8143
+      },
+      "relative_length_gap": 0.04420975070612796,
+      "source_unit_count": 805,
+      "first_source_id": "569515",
+      "last_source_id": "570319",
+      "source_units_sha256": "609350834ea955433b0dfb8f847bf6410c0261620dbd3eb1bcf184ee5c8cfe5f",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 30,
+        "fr": 32
+      },
+      "min_block_confidence": 1.0
+    },
+    {
+      "doc_id": "controls-015",
+      "tokens": {
+        "en": 7991,
+        "fr": 7790
+      },
+      "relative_length_gap": 0.025153297459642097,
+      "source_unit_count": 809,
+      "first_source_id": "1438997",
+      "last_source_id": "1439805",
+      "source_units_sha256": "6b2c53131946345a6f22dacbab5940f4dce884f922c409bfb1493317a73134ec",
+      "source_columns": {
+        "en": "en",
+        "fr": "fr"
+      },
+      "language_blocks": {
+        "en": 31,
+        "fr": 30
+      },
+      "min_block_confidence": 1.0
+    }
+  ],
+  "limitations": [
+    "Source-unit and template replay checks integrity, not semantic translation equivalence.",
+    "Language classification is an automated screen; inspect the paired passages before inference.",
+    "Eligible passage count comes from preparation's full registered-file scan; this audit rechecks selected passages, not the unselected candidate pool."
+  ],
+  "audit_sha256": "5e1c80e175181aa95eb67462e895da70749b86abd619047cda9d5f855c143f28"
+}

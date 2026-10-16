@@ -95,17 +95,27 @@ def parallel_source(config, corpus):
     path = hf_hub_download(
         config["dataset"], config["dataset_file"], repo_type="dataset", revision=config["dataset_revision"]
     )
+    source_hash = file_digest(path)
+    if source_hash != config["dataset_sha256"]:
+        raise ValueError("Parallel source SHA256 differs from the registered corpus file.")
+    parquet = pq.ParquetFile(path)
+    columns = config["dataset_columns"]
+    if not set(columns.values()).issubset(parquet.schema_arrow.names):
+        raise ValueError("Registered parallel columns are missing from the corpus file.")
 
     def stream():
-        for batch in pq.ParquetFile(path).iter_batches(batch_size=1024):
-            yield from batch.to_pylist()
+        for batch in parquet.iter_batches(batch_size=1024):
+            for row in batch.to_pylist():
+                yield {"translation": {lang: row[column] for lang, column in columns.items()}}
 
     return stream(), {
         "kind": "huggingface_parquet",
         "dataset": config["dataset"],
         "revision": config["dataset_revision"],
         "file": config["dataset_file"],
-        "sha256": file_digest(path),
+        "sha256": source_hash,
+        "aligned_units": parquet.metadata.num_rows,
+        "columns": columns,
     }
 
 
@@ -174,6 +184,7 @@ def collect_pairs(source, tokenizer, config):
     """Select whole aligned units in source order; never trim only one language."""
     lower = math.ceil(config["target_tokens"] * (1 - config["length_tolerance"]))
     upper = math.floor(config["target_tokens"] * (1 + config["length_tolerance"]))
+    special_ids = set(tokenizer.all_special_ids)
     window, counts, candidates, used = deque(), {"en": 0, "fr": 0}, [], set()
     for index, row in enumerate(source):
         if index and index % 10000 == 0:
@@ -192,7 +203,7 @@ def collect_pairs(source, tokenizer, config):
         tokens = {
             lang: tokenizer.encode(text + "\n\n", add_special_tokens=False) for lang, text in pair.items()
         }
-        if any(set(ids).intersection(tokenizer.all_special_ids) for ids in tokens.values()):
+        if any(special_ids.intersection(ids) for ids in tokens.values()):
             window.clear()
             counts = {"en": 0, "fr": 0}
             continue
@@ -234,13 +245,6 @@ def prepare(config, output, corpus=None, model=None):
     from transformers import AutoTokenizer
 
     validate_config(config)
-    if corpus is None and config["default_corpus_verified_pairs"] < config["documents"]:
-        raise ValueError(
-            f"Default corpus is blocked: full v2 audit found {config['default_corpus_verified_pairs']} "
-            f"eligible pairs, but the registered design requires {config['documents']}. "
-            "Agree on an expanded/replacement parallel corpus before preparing the formal run; "
-            "do not relax the protocol or reuse v1 inputs."
-        )
     if output.exists() and any(output.iterdir()):
         raise ValueError("Use a fresh controls data directory.")
     engine_config = {

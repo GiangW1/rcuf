@@ -290,8 +290,12 @@ def summarize(data_dir, run_dir, reviews=None):
         "metrics_status": "reviewed" if review["review_complete"] else "preliminary",
         "limitations": [
             "Sixteen passages are the statistical units; repeated questions and policies are paired conditions.",
-            "OPUS Books contains translated literary text and imperfect sentence alignments, not Wikipedia.",
-            "Passages can share a source book; intervals do not establish corpus-wide or model-wide generality.",
+            "Parallel translations are not independent English/French originals; see manifest.source for provenance.",
+            "Automatic audits check language and integrity, not semantic translation equivalence.",
+            (
+                "Disjoint passages can share underlying sources or boilerplate; intervals do not establish "
+                "source-independent, corpus-wide, or model-wide generality."
+            ),
             "Length matching does not remove all translation or style differences.",
             "An 8K format null result does not establish stability at longer lengths or for other rules.",
             "These behavioral tests do not identify a recurrent or attention mechanism.",

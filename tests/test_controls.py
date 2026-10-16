@@ -15,7 +15,15 @@ from rcuf.controls import (
     validated_results,
 )
 from rcuf.controls_analysis import apply_reviews, evaluate_family, review_export, summarize
-from rcuf.controls_data import BACKGROUND, POLICIES, QUESTIONS, collect_pairs, load_controls, validate_config
+from rcuf.controls_data import (
+    BACKGROUND,
+    POLICIES,
+    QUESTIONS,
+    collect_pairs,
+    load_controls,
+    parallel_source,
+    validate_config,
+)
 from rcuf.controls_scoring import parse_format, score
 from rcuf.io import digest, file_digest, read_json, read_jsonl, write_json, write_jsonl
 
@@ -546,6 +554,8 @@ def test_collect_pairs_preserves_whole_units_and_does_not_reuse_them(monkeypatch
     assert {p["units"][0]["id"] for p in selected} == {str(i) for i in range(16)}
     assert all(p["tokens"] == {"en": 80, "fr": 80} for p in selected)
     assert all(p["texts"]["en"] in {r["translation"]["en"] for r in source} for p in selected)
+    with pytest.raises(ValueError, match="Only 15 eligible.*need 16"):
+        collect_pairs(iter(source[:15]), Tokenizer(), cfg)
 
 
 def test_paired_background_audit_rejects_mixing_and_records_whole_pair_reversal(monkeypatch):
@@ -631,15 +641,92 @@ def test_whole_passage_label_cannot_replace_registered_language_blocks(tmp_path)
         load_controls(tmp_path)
 
 
-def test_known_insufficient_default_corpus_fails_before_download(tmp_path, monkeypatch):
-    from transformers import AutoTokenizer
+def test_registered_parallel_file_hash_checked_before_reading(tmp_path, monkeypatch):
+    import huggingface_hub
+    import pyarrow as pa
+    import pyarrow.parquet as pq
 
-    from rcuf.controls_data import prepare
+    path = tmp_path / "parallel.parquet"
+    rows = [{"translation": {"en": "English passage", "fr": "Texte français"}}]
+    pq.write_table(
+        pa.Table.from_pylist([{"english": "English passage", "non_english": "Texte français"}]), path
+    )
+    cfg, downloads = dict(config(), dataset_sha256=file_digest(path)), []
 
-    def unexpected_download(*args, **kwargs):
-        pytest.fail("Known insufficient corpus must fail before any model/tokenizer download.")
+    def download(*args, **kwargs):
+        downloads.append((args, kwargs))
+        return str(path)
 
-    monkeypatch.setattr(AutoTokenizer, "from_pretrained", unexpected_download)
-    with pytest.raises(ValueError, match="Default corpus is blocked.*14.*16"):
-        prepare(config(), tmp_path / "new-data")
-    assert not (tmp_path / "new-data").exists()
+    monkeypatch.setattr(huggingface_hub, "hf_hub_download", download)
+    source, metadata = parallel_source(cfg, None)
+    assert list(source) == rows
+    assert metadata["aligned_units"] == 1 and metadata["sha256"] == file_digest(path)
+    assert metadata["columns"] == {"en": "english", "fr": "non_english"}
+    assert downloads == [
+        ((cfg["dataset"], cfg["dataset_file"]), {"repo_type": "dataset", "revision": cfg["dataset_revision"]})
+    ]
+    with pytest.raises(ValueError, match="columns are missing"):
+        parallel_source(dict(cfg, dataset_columns={"en": "missing", "fr": "non_english"}), None)
+    monkeypatch.setattr(pq, "ParquetFile", lambda *args: pytest.fail("Must reject hash before parsing."))
+    with pytest.raises(ValueError, match="SHA256 differs"):
+        parallel_source(config(), None)
+
+
+def test_cpu_audit_rejects_tokenizer_or_source_drift(tmp_path, monkeypatch):
+    import scripts.audit_controls_data as module
+
+    manifest, _ = sealed_data(tmp_path)
+    manifest.update(
+        engine_config={"model": "fixture"},
+        tokenizer_sha256=digest("expected-tokenizer"),
+        source={"kind": "local_jsonl", "sha256": "expected-source"},
+    )
+    manifest["manifest_sha256"] = digest({k: v for k, v in manifest.items() if k != "manifest_sha256"})
+    write_json(tmp_path / "manifest.json", manifest)
+
+    class Tokenizer:
+        backend_tokenizer = type("Backend", (), {"to_str": lambda self: "different-tokenizer"})()
+
+    monkeypatch.setattr(module.AutoTokenizer, "from_pretrained", lambda *args, **kwargs: Tokenizer())
+    with pytest.raises(ValueError, match="Audit tokenizer differs"):
+        module.audit(tmp_path)
+    monkeypatch.setattr(Tokenizer.backend_tokenizer, "to_str", lambda: "expected-tokenizer")
+    monkeypatch.setattr(module, "parallel_source", lambda *args: (iter([]), {"sha256": "wrong"}))
+    with pytest.raises(ValueError, match="Audit source differs"):
+        module.audit(tmp_path)
+    monkeypatch.setattr(module, "parallel_source", lambda *args: (iter([]), manifest["source"]))
+    with pytest.raises(ValueError, match="Selected source units are missing"):
+        module.audit(tmp_path)
+
+
+def test_published_data_audit_is_sealed_and_matches_unchanged_protocol():
+    report = read_json(Path(__file__).resolve().parents[1] / "docs/data-audit-controls-v2-subtitles.json")
+    assert report["audit_sha256"] == digest({k: v for k, v in report.items() if k != "audit_sha256"})
+    assert report["config"] == config()
+    assert report["model_generation_performed"] is False
+    assert report["source"]["sha256"] == config()["dataset_sha256"]
+    assert report["scanned_aligned_units"] == report["source"]["aligned_units"]
+    assert report["eligible_passages"] >= 16
+    assert report["selected_documents"] == len(report["documents"]) == 16
+    assert len({doc["doc_id"] for doc in report["documents"]}) == 16
+    assert report["families"] == {"language": 288, "format": 192}
+    assert report["replayed_examples"] == 480
+    assert (
+        sum(doc["source_unit_count"] for doc in report["documents"])
+        == report["selected_distinct_source_units"]
+    )
+    assert config()["target_tokens"] == 8192 and config()["documents"] == 16
+    assert config()["length_tolerance"] == config()["pair_length_tolerance"] == 0.05
+    assert config()["language_audit_chunk_tokens"] == 256
+    assert config()["language_audit_min_confidence"] == 0.98
+    assert config()["gates"] == {
+        "max_truncated_answers": 0,
+        "short_min_successes": 15,
+        "content_min_successes": 15,
+        "min_control_loss": 0.25,
+        "min_affected_documents": 4,
+    }
+    for doc in report["documents"]:
+        assert all(7783 <= size <= 8601 for size in doc["tokens"].values())
+        assert doc["relative_length_gap"] <= 0.05
+        assert doc["min_block_confidence"] >= 0.98

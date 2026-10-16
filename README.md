@@ -12,9 +12,9 @@
 
 **当前下一轮：** [先排除语言倾向，再检验 JSON/XML 规则的两关生死实验](docs/language-controls.md)。16 组新英法对齐材料，语言关 288 条、过关后格式关 192 条；使用 `controls-prepare` / `controls-launch` / `controls-summarize`。固定两张卡、阶段门槛与人工复核，不进行状态干预。
 
-PR3 复审后的 controls 协议为 **v2**：增加背景分块语言审核、截断有效性门槛，修复复核输入与跨阶段续跑问题。请使用新 `data/language-controls-v2` / `runs/language-controls-v2` 目录，不能与 v1 混跑。
+PR3 复审后的 controls 协议为 **v2**：增加背景分块语言审核、截断有效性门槛，修复复核输入与跨阶段续跑问题。默认改用固定版本的 OpenSubtitles 英法平行句对；请使用新 `data/language-controls-v2-subtitles` / `runs/language-controls-v2-subtitles` 目录，不能与 v1 或旧 Books 版 v2 混跑。
 
-**PR3 当前有数据阻断，暂不能直接开跑：** 默认 OPUS Books 全量严格筛选只剩 14 组合格材料，不足预设 16 组。程序明确拒绝默认制备；需先确认扩充/替换语料，不降低门槛或混入旧的双语背景。
+**PR3 数据制备已验证：** 按用户同意的换源方案，全量筛得 24 组合格窗口，固定 seed 选取 16 组，长度容差和所有门槛不变。16 组材料、981 个语言分块及 480 条完整输入的 CPU 重放审计见 [审计元数据](docs/data-audit-controls-v2-subtitles.json)。源码中新增 `python -m scripts.audit_controls_data` 独立核验步骤；[双卡运行说明](docs/language-controls.md#4-服务器运行两张-a100-80gb) 已更新。这里只验证输入，不代表已运行本轮 4B/A100 实验；字幕译文质量与领域变化的限制请一并阅读。
 
 **上一轮最小确认：** [两卡交叉复跑、独立英/法资料与等幅度干预](docs/confirmation.md)。固定先导参数，768 条正式回答 + 6 条 smoke；使用 `confirm-*` 命令，独立于新的 controls 流程。
 
